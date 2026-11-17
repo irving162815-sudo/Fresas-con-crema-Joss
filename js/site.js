@@ -8,6 +8,7 @@ const publicPages = [
   ['register', 'registro.html', 'Registrarse']
 ];
 
+// Busca los datos del cliente que inició sesión para mostrar su nombre en el menú.
 function readSignedInCustomer() {
   try {
     const email = localStorage.getItem('jossysBerrySignedIn');
@@ -16,10 +17,12 @@ function readSignedInCustomer() {
   } catch { return null; }
 }
 
+// Evita que nombres escritos por clientes se interpreten como etiquetas HTML.
 function escapeHTML(text) {
   return String(text).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 
+// Dibuja el enlace de inicio de sesión o el saludo de la cuenta activa.
 function makeAccountLink(activePage) {
   const customer = readSignedInCustomer();
   return customer
@@ -27,6 +30,7 @@ function makeAccountLink(activePage) {
     : `<a class="login-link${activePage === 'login' ? ' active' : ''}" href="iniciar-sesion.html">Iniciar sesión</a>`;
 }
 
+// Crea el encabezado común con el logo, navegación y controles de cuenta.
 function makeHeader() {
   const activePage = document.body.dataset.page;
   const links = publicPages.map(([page, file, label]) => {
@@ -42,6 +46,7 @@ function makeHeader() {
   </header>`;
 }
 
+// Crea el pie de página compartido con redes, WhatsApp y reporte de fallas.
 function makeFooter() {
   return `<footer class="site-footer">
     <a class="brand" href="index.html"><img src="assets/logo-jossys-berry.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
@@ -54,6 +59,7 @@ function makeFooter() {
   </footer>`;
 }
 
+// Crea el acceso al panel de administración y la ventana del chatbot.
 function makeAssistant() {
   return `<a class="admin-corner" href="admin.html" aria-label="Abrir acceso de administración">♙ <span>Acceso admin</span></a>
   <button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Abrir chatbot">✦ <span>¿Te ayudo?</span></button>
@@ -80,6 +86,7 @@ window.addEventListener('jossys-data-changed', () => {
 });
 
 function signOut() {
+  // Borra la sesión del navegador y refresca el nombre mostrado en el encabezado.
   localStorage.removeItem('jossysBerrySignedIn');
   window.dispatchEvent(new CustomEvent('jossys-data-changed'));
 }
@@ -88,6 +95,7 @@ document.querySelector('#sign-out')?.addEventListener('click', signOut);
 
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
+// Abre y cierra el menú desplegable en pantallas pequeñas.
 menuButton?.addEventListener('click', () => {
   const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
   menuButton.setAttribute('aria-expanded', String(!isOpen));
@@ -96,6 +104,7 @@ menuButton?.addEventListener('click', () => {
 });
 
 document.querySelector('#welcome-enter')?.addEventListener('click', () => {
+  // Anima la salida de la bienvenida y la quita para mostrar la página principal.
   const welcome = document.querySelector('#welcome-screen');
   welcome.classList.add('is-leaving');
   window.setTimeout(() => welcome.remove(), 560);

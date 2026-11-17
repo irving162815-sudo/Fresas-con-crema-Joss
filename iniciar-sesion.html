@@ -9,20 +9,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
-<script src="js/google-config.js" defer></script>
 <script src="js/site.js" defer></script>
 <script src="js/public-app.js" defer></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
 </head>
 <body data-page="login">
 <div data-partial="header"></div>
 <main>
+<!-- Encabezado de la página para clientes que ya tienen cuenta. -->
   <section class="page-banner">
     <p class="eyebrow">QUÉ GUSTO VERTE DE NUEVO</p>
     <h1>Iniciar <em>sesión</em></h1>
     <p>Entra a tu cuenta de cliente fiel de Jossy’s Berry PTY.</p>
   </section>
+  <!-- El formulario envía correo y contraseña al código de inicio de sesión. -->
   <section class="section-wrap form-page">
     <div>
       <h2>Tu próximo<br>antojo te <em>espera.</em></h2>
@@ -36,9 +36,6 @@
       <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña">
       <button class="button button-dark" type="submit">Iniciar sesión <span>→</span></button>
       <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
-      <div class="auth-divider"><span>o continúa con Google</span></div>
-      <div id="google-signin" class="google-signin"></div>
-      <p class="form-hint" id="google-message" role="status" aria-live="polite">Google Sign-In requiere configurar el identificador de cliente del proyecto.</p>
       <p class="auth-switch">¿Todavía no tienes cuenta? <a href="registro.html">Regístrate</a>.</p>
     </form>
   </section>

@@ -2,6 +2,7 @@
 const STORAGE_KEY = 'jossysBerryDemoData';
 const CHAT_ID_KEY = 'jossysBerryChatId';
 
+// Lee los pedidos, clientes, chats y reportes guardados en este navegador.
 function readData() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -17,11 +18,13 @@ function readData() {
   }
 }
 
+// Guarda los datos de demostración y avisa a las otras partes de la página.
 function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   window.dispatchEvent(new CustomEvent('jossys-data-changed'));
 }
 
+// Muestra un aviso debajo del formulario, resaltándolo si ocurrió un error.
 function showMessage(element, text, isError = false) {
   if (!element) return;
   element.textContent = text;
@@ -75,6 +78,7 @@ document.querySelector('#location-button')?.addEventListener('click', () => {
 });
 
 document.querySelector('#order-form')?.addEventListener('submit', (event) => {
+  // Guarda el pedido y los datos de entrega para que aparezcan en Admin.
   event.preventDefault();
   const form = event.currentTarget;
   const fields = Object.fromEntries(new FormData(form));
@@ -96,6 +100,7 @@ document.querySelector('#order-form')?.addEventListener('submit', (event) => {
 });
 
 document.querySelector('#loyalty-form')?.addEventListener('submit', (event) => {
+  // Guarda un registro sencillo cuando se usa el formulario antiguo de clientes fieles.
   event.preventDefault();
   const fields = Object.fromEntries(new FormData(event.currentTarget));
   const data = readData();
@@ -107,6 +112,7 @@ document.querySelector('#loyalty-form')?.addEventListener('submit', (event) => {
 
 // Crea la cuenta local y guarda por separado el permiso opcional para promociones.
 document.querySelector('#register-form')?.addEventListener('submit', async (event) => {
+  // Valida que el correo sea único y guarda la nueva cuenta en el navegador.
   event.preventDefault();
   const form = event.currentTarget;
   const fields = Object.fromEntries(new FormData(form));
@@ -135,6 +141,7 @@ document.querySelector('#register-form')?.addEventListener('submit', async (even
 
 // Comprueba el correo y la contraseña contra las cuentas locales de esta demostración.
 document.querySelector('#login-form')?.addEventListener('submit', async (event) => {
+  // Comprueba el correo y la contraseña antes de activar la sesión local.
   event.preventDefault();
   const fields = Object.fromEntries(new FormData(event.currentTarget));
   const email = fields.email.trim().toLowerCase();
@@ -151,66 +158,9 @@ document.querySelector('#login-form')?.addEventListener('submit', async (event) 
   } catch (error) { showMessage(message, error.message, true); }
 });
 
-// Google Sign-In crea o reconoce un perfil de demostración en este navegador.
-// Un sitio público necesita un servidor para verificar el token y proteger cuentas reales.
-function decodeGoogleProfile(credential) {
-  const payload = credential.split('.')[1];
-  if (!payload) throw new Error('Google no devolvió un perfil válido. Intenta de nuevo.');
-  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-  return JSON.parse(decodeURIComponent(Array.from(atob(base64), (character) => `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`).join('')));
-}
-
-function handleGoogleCredential(response) {
-  const message = document.querySelector('#google-message');
-  try {
-    const profile = decodeGoogleProfile(response.credential);
-    const expectedClientId = window.JOSSYS_GOOGLE_CLIENT_ID;
-    if (!profile.email || !profile.email_verified || profile.aud !== expectedClientId) {
-      throw new Error('No se pudo validar el correo de Google para este sitio.');
-    }
-    const email = profile.email.toLowerCase();
-    const data = readData();
-    let customer = data.customers.find((item) => item.email === email);
-    if (!customer) {
-      customer = {
-        id: `google-${Date.now()}`, name: profile.name || email.split('@')[0], email,
-        phone: '', authProvider: 'google', marketingConsent: false,
-        createdAt: new Date().toLocaleString('es-PA')
-      };
-      data.customers.unshift(customer);
-      saveData(data);
-    }
-    localStorage.setItem('jossysBerrySignedIn', email);
-    window.dispatchEvent(new CustomEvent('jossys-data-changed'));
-    showMessage(message, `¡Hola, ${customer.name}! Abriendo tu cuenta…`);
-    window.setTimeout(() => { window.location.href = 'index.html'; }, 500);
-  } catch (error) {
-    showMessage(message, error.message || 'No pudimos iniciar sesión con Google.', true);
-  }
-}
-
-function setupGoogleSignIn() {
-  const button = document.querySelector('#google-signin');
-  const message = document.querySelector('#google-message');
-  if (!button) return;
-  const clientId = window.JOSSYS_GOOGLE_CLIENT_ID?.trim();
-  if (!clientId) {
-    if (message) message.textContent = 'Para activar Google, configura el ID de cliente web en js/google-config.js y autoriza el dominio de tu sitio en Google Cloud.';
-    return;
-  }
-  if (!window.google?.accounts?.id) {
-    if (message) message.textContent = 'No se pudo cargar Google Sign-In. Revisa tu conexión a Internet e intenta de nuevo.';
-    return;
-  }
-  window.google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
-  window.google.accounts.id.renderButton(button, { theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill', width: 280 });
-  if (message) message.textContent = 'Google registrará/iniciará sesión en este navegador. Para cuentas seguras compartidas hace falta conectar un servidor.';
-}
-
-window.addEventListener('load', setupGoogleSignIn);
-
 // Guarda los avisos de fallas en el mismo espacio local que consulta la página Admin.
 document.querySelector('#report-form')?.addEventListener('submit', (event) => {
+  // Guarda el reporte para que el equipo lo revise desde el panel Admin.
   event.preventDefault();
   const form = event.currentTarget;
   const fields = Object.fromEntries(new FormData(form));
@@ -227,6 +177,7 @@ document.querySelector('#report-form')?.addEventListener('submit', (event) => {
 });
 
 function chooseConversation(data) {
+  // Recupera el chat abierto o crea una conversación nueva para este visitante.
   let id = localStorage.getItem(CHAT_ID_KEY);
   let conversation = data.conversations.find((item) => item.id === id);
   if (!conversation || conversation.status === 'closed') {
@@ -269,6 +220,7 @@ function getBrandReply(question) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Conecta los botones del chatbot, guarda mensajes y muestra respuestas.
   const panel = document.querySelector('#assistant-panel');
   const launcher = document.querySelector('#assistant-launcher');
   if (!panel || !launcher) return;

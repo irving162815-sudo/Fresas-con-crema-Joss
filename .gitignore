@@ -1,6 +1,15 @@
-# Nunca subir claves ni datos de clientes a GitHub.
+# Variables de entorno y secretos locales. .env.example sí se puede compartir,
+# siempre que solo contenga nombres de variables y valores de ejemplo.
 .env
+.env.*
+!.env.example
+
+# Dependencias instaladas localmente; se pueden recuperar con npm install.
+node_modules/
+
+# No subir datos personales generados por la aplicación.
 data/*.json
 data/*.tmp
-node_modules/
+
+# Registros de errores de npm.
 npm-debug.log*

@@ -6,6 +6,7 @@ const dashboard = document.querySelector('#admin-dashboard');
 const adminMessage = document.querySelector('#admin-message');
 
 function readData() {
+  // Recupera los registros del navegador y usa listas vacías si aún no hay datos.
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     return {
@@ -17,11 +18,13 @@ function readData() {
 }
 
 function saveData(data) {
+  // Persiste cambios del panel y actualiza cualquier pantalla que esté abierta.
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   window.dispatchEvent(new CustomEvent('jossys-data-changed'));
 }
 
 function makeElement(tag, className, text) {
+  // Crea elementos con texto seguro para mostrar datos escritos por los clientes.
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
@@ -29,6 +32,7 @@ function makeElement(tag, className, text) {
 }
 
 function renderOrders(data) {
+  // Dibuja los pedidos y permite eliminar uno o abrir su ubicación en el mapa.
   const list = document.querySelector('#orders-list');
   list.replaceChildren();
   if (!data.orders.length) { list.append(makeElement('p', 'empty-orders', 'Aún no hay pedidos en este navegador.')); return; }
@@ -56,6 +60,7 @@ function renderOrders(data) {
 }
 
 function renderConversations(data) {
+  // Muestra los mensajes del chatbot y permite que Admin responda o cierre chats.
   const list = document.querySelector('#conversations-list');
   list.replaceChildren();
   if (!data.conversations.length) { list.append(makeElement('p', 'empty-orders', 'Todavía no hay preguntas en la bandeja.')); return; }
@@ -103,6 +108,7 @@ function renderConversations(data) {
 }
 
 function renderCustomers(data) {
+  // Presenta los clientes registrados y deja retirar su permiso promocional.
   const list = document.querySelector('#customers-list');
   list.replaceChildren();
   if (!data.customers.length) { list.append(makeElement('p', 'empty-orders', 'Aún no hay registros de clientes en este navegador.')); return; }
@@ -130,6 +136,7 @@ function renderCustomers(data) {
 
 // La bandeja de fallas guarda la descripción y el estado de atención de cada reporte.
 function renderReports(data) {
+  // Muestra los reportes de fallas y permite marcarlos atendidos o eliminarlos.
   const list = document.querySelector('#reports-list');
   list.replaceChildren();
   if (!data.reports.length) { list.append(makeElement('p', 'empty-orders', 'Todavía no hay reportes de fallas.')); return; }
@@ -165,6 +172,7 @@ function renderReports(data) {
 }
 
 function renderPromotions(data) {
+  // Lista las campañas que el administrador preparó anteriormente.
   const list = document.querySelector('#promotions-list');
   list.replaceChildren();
   if (!data.promotions.length) { list.append(makeElement('p', 'empty-orders', 'Aún no has preparado una promoción.')); return; }
@@ -186,6 +194,7 @@ function refreshDashboard(force = false) {
 }
 
 loginForm.addEventListener('submit', (event) => {
+  // Abre el panel de demostración si se escribe la clave configurada en el código.
   event.preventDefault();
   const password = document.querySelector('#admin-password').value;
   if (password !== ADMIN_PASSWORD) { adminMessage.textContent = 'La contraseña no coincide.'; return; }
@@ -194,6 +203,7 @@ loginForm.addEventListener('submit', (event) => {
 });
 
 document.querySelector('#admin-logout').addEventListener('click', () => {
+  // Oculta el panel y vuelve al formulario de acceso de demostración.
   dashboard.hidden = true; loginForm.hidden = false; loginForm.reset();
 });
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true)));
@@ -258,4 +268,5 @@ document.querySelector('#open-campaign-email')?.addEventListener('click', () => 
 
 window.addEventListener('storage', () => refreshDashboard());
 window.addEventListener('jossys-data-changed', () => refreshDashboard());
+// Actualiza los datos visibles mientras el panel está abierto, para la demo local.
 window.setInterval(() => { if (!dashboard.hidden) refreshDashboard(); }, 1500);
