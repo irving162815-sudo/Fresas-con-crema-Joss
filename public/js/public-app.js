@@ -8,10 +8,11 @@ function readData() {
     return {
       orders: Array.isArray(value.orders) ? value.orders : [],
       customers: Array.isArray(value.customers) ? value.customers : [],
-      conversations: Array.isArray(value.conversations) ? value.conversations : []
+      conversations: Array.isArray(value.conversations) ? value.conversations : [],
+      reports: Array.isArray(value.reports) ? value.reports : []
     };
   } catch {
-    return { orders: [], customers: [], conversations: [] };
+    return { orders: [], customers: [], conversations: [], reports: [] };
   }
 }
 
@@ -87,6 +88,23 @@ document.querySelector('#loyalty-form')?.addEventListener('submit', (event) => {
   saveData(data);
   showMessage(document.querySelector('#loyalty-message'), `¡Bienvenido/a, ${fields.name}! Tu registro quedó guardado en este navegador.`);
   event.currentTarget.reset();
+});
+
+// Guarda los avisos de fallas en el mismo espacio local que consulta la página Admin.
+document.querySelector('#report-form')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const fields = Object.fromEntries(new FormData(form));
+  const data = readData();
+  const reportId = `F-${Date.now().toString(36).toUpperCase()}`;
+  data.reports.unshift({
+    id: reportId, category: fields.category, page: fields.page,
+    description: fields.description.trim(), steps: fields.steps.trim(),
+    contact: fields.contact.trim(), createdAt: new Date().toLocaleString('es-PA'), resolved: false
+  });
+  saveData(data);
+  showMessage(document.querySelector('#report-message'), `Gracias por avisarnos. El reporte ${reportId} quedó guardado en este navegador.`);
+  form.reset();
 });
 
 function chooseConversation(data) {

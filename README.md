@@ -19,11 +19,16 @@ No hay un servidor Node independiente ni se instala nada con npm. La vista previ
 - `public/redes.html`: Instagram y WhatsApp.
 - `public/registro.html`: formulario de cliente fiel.
 - `public/pedido.html`: pedido con dirección escrita o ubicación GPS.
+- `public/reportar.html`: formulario para avisar de una falla o error.
 - `public/admin.html`: página administrativa separada, no enlazada en la navegación pública.
+- Las páginas públicas tienen un botón flotante **Acceso admin** en la esquina inferior izquierda.
+- `public/assets/favicon.png`: versión pequeña del logo usada como icono de pestaña.
 - `public/css/estilos.css`: diseño, colores, adaptación móvil y animaciones.
 - `public/js/site.js`: encabezado, pie y diseño compartido entre páginas.
 - `public/js/public-app.js`: pedidos, registros y respuestas del chatbot.
 - `public/js/admin.js`: inicio de sesión y bandeja de demostración.
+
+La bandeja de administración muestra estos reportes y permite marcarlos como atendidos. El chat ya no se vuelve a dibujar mientras escribes una respuesta; al enviarla, se guarda en la conversación local.
 
 ## Chatbot y respuestas humanas
 

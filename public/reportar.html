@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reporta una falla o error en el sitio de Jossy’s Berry PTY.">
+<title>Reportar una falla | Jossy’s Berry PTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/site.js" defer></script>
+<script src="js/public-app.js" defer></script>
+<link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
+</head>
+<body data-page="report">
+<div data-partial="header"></div>
+<main>
+  <section class="page-banner">
+    <p class="eyebrow">AYÚDANOS A MEJORAR</p>
+    <h1>Reportar una <em>falla</em></h1>
+    <p>Cuéntanos qué pasó. El reporte aparecerá en la bandeja de administración de esta demostración.</p>
+  </section>
+  <section class="section-wrap report-page">
+    <div>
+      <p class="eyebrow">¿QUÉ OCURRIÓ?</p>
+      <h2>Tu aviso nos<br>ayuda a <em>mejorar.</em></h2>
+      <p>Describe el error con tus propias palabras. Si puedes, indica qué estabas haciendo cuando apareció.</p>
+      <p class="privacy-note">Este prototipo guarda los reportes solo en el almacenamiento local de este navegador. No se envían por Internet.</p>
+    </div>
+    <form class="report-form" id="report-form">
+      <label for="report-category">Tipo de problema</label>
+      <select id="report-category" name="category" required>
+        <option value="" disabled selected>Selecciona una categoría</option>
+        <option>Enlace o botón no funciona</option>
+        <option>Error al enviar un pedido</option>
+        <option>Problema con el chatbot</option>
+        <option>Falla visual o de diseño</option>
+        <option>Otro problema</option>
+      </select>
+      <label for="report-page">¿En qué página ocurrió?</label>
+      <select id="report-page" name="page" required>
+        <option value="" disabled selected>Selecciona una página</option>
+        <option>Inicio</option><option>Menú</option><option>Sobre nosotros</option>
+        <option>Nuestras redes</option><option>Pedidos</option><option>Registro</option>
+        <option>Chatbot</option><option>Panel de administración</option><option>Otra</option>
+      </select>
+      <label for="report-description">Describe la falla</label>
+      <textarea id="report-description" name="description" required minlength="8" maxlength="1200" placeholder="¿Qué pasó? ¿Qué esperabas que ocurriera?"></textarea>
+      <label for="report-steps">Pasos para volver a verla <span>(opcional)</span></label>
+      <textarea id="report-steps" name="steps" maxlength="800" placeholder="Por ejemplo: abrí el menú y presioné…"></textarea>
+      <label for="report-contact">Tu contacto <span>(opcional)</span></label>
+      <input id="report-contact" name="contact" maxlength="60" placeholder="WhatsApp o correo, si deseas que te contactemos">
+      <button class="button button-dark" type="submit">Enviar reporte <span>↗</span></button>
+      <p class="form-message" id="report-message" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+</main>
+<div data-partial="footer"></div>
+<div data-partial="assistant"></div>
+</body>
+</html>

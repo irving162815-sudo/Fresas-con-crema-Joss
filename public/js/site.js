@@ -31,11 +31,13 @@ function makeFooter() {
       <a class="social-link" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer">WhatsApp 6434-7297</a>
       <a class="social-link" href="https://wa.me/50766260366" target="_blank" rel="noopener noreferrer">WhatsApp 6626-0366</a>
     </div><p class="copyright">© <span data-year></span> Jossy’s Berry PTY · Frescura y dulzura</p>
+    <a class="footer-report-link" href="reportar.html">Reportar una falla</a>
   </footer>`;
 }
 
 function makeAssistant() {
-  return `<button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Abrir chatbot">✦ <span>¿Te ayudo?</span></button>
+  return `<a class="admin-corner" href="admin.html" aria-label="Abrir acceso de administración">♙ <span>Acceso admin</span></a>
+  <button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Abrir chatbot">✦ <span>¿Te ayudo?</span></button>
   <aside class="assistant-panel" id="assistant-panel" aria-label="Chatbot Berry" hidden>
     <div class="assistant-head"><div><span class="assistant-spark">✦</span><strong>Chatbot Berry</strong><small>Tu ayudante de Jossy’s Berry 🍓</small></div><button type="button" id="assistant-close" aria-label="Cerrar chat">×</button></div>
     <div class="assistant-messages" id="assistant-messages" aria-live="polite"><p class="bot-message">¡Hola! Puedo contarte sobre nuestros productos, ayudarte con un pedido o avisar al equipo si necesitas hablar con alguien.</p></div>

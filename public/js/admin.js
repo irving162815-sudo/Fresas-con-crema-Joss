@@ -1,5 +1,5 @@
-// Panel local para presentación. No se conecta a un servidor ni protege datos reales.
-const ADMIN_PASSWORD = 'ADMINPTY507'; // Cambia esta clave solo para la demostración; está visible en este archivo.
+// Panel local de demostración: los datos proceden del almacenamiento de este navegador.
+const ADMIN_PASSWORD = 'ADMINPTY507'; // Clave visible solo para la presentación escolar.
 const STORAGE_KEY = 'jossysBerryDemoData';
 const loginForm = document.querySelector('#admin-login');
 const dashboard = document.querySelector('#admin-dashboard');
@@ -8,8 +8,11 @@ const adminMessage = document.querySelector('#admin-message');
 function readData() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    return { orders: value.orders || [], customers: value.customers || [], conversations: value.conversations || [] };
-  } catch { return { orders: [], customers: [], conversations: [] }; }
+    return {
+      orders: value.orders || [], customers: value.customers || [],
+      conversations: value.conversations || [], reports: value.reports || []
+    };
+  } catch { return { orders: [], customers: [], conversations: [], reports: [] }; }
 }
 
 function saveData(data) {
@@ -45,7 +48,7 @@ function renderOrders(data) {
     remove.addEventListener('click', () => {
       const latest = readData();
       latest.orders = latest.orders.filter((item) => item.id !== order.id);
-      saveData(latest); refreshDashboard();
+      saveData(latest); refreshDashboard(true);
     });
     card.append(details, remove); list.append(card);
   });
@@ -59,7 +62,8 @@ function renderConversations(data) {
     const card = makeElement('article', 'conversation-card');
     const heading = makeElement('div', 'conversation-title');
     heading.append(makeElement('h3', '', `Chat ${conversation.id.slice(-8)}`));
-    heading.append(makeElement('span', 'status-pill', conversation.status === 'closed' ? 'Cerrada' : conversation.handoff ? (conversation.status === 'answered' ? 'Respondida' : 'Necesita asesor') : 'Chatbot'));
+    const status = conversation.status === 'closed' ? 'Cerrada' : conversation.handoff ? (conversation.status === 'answered' ? 'Respondida' : 'Necesita asesor') : 'Chatbot';
+    heading.append(makeElement('span', 'status-pill', status));
     const log = makeElement('div', 'chat-log');
     conversation.messages.forEach((message) => {
       const who = message.role === 'customer' ? 'Cliente' : message.role === 'human' ? 'Asesor' : 'Berry';
@@ -69,23 +73,27 @@ function renderConversations(data) {
     card.append(heading, log);
     if (conversation.status !== 'closed') {
       const replyForm = makeElement('form', 'conversation-reply');
-      const input = makeElement('input'); input.name = 'reply'; input.placeholder = 'Escribe una respuesta para el cliente…'; input.maxLength = 1200; input.required = true;
+      const input = makeElement('input');
+      input.name = 'reply'; input.placeholder = 'Escribe una respuesta para el cliente…'; input.maxLength = 1200; input.required = true;
       const send = makeElement('button', '', 'Responder'); send.type = 'submit';
       replyForm.append(input, send);
       replyForm.addEventListener('submit', (event) => {
         event.preventDefault();
+        const replyText = input.value.trim();
+        if (!replyText) { input.focus(); return; }
         const latest = readData();
         const item = latest.conversations.find((entry) => entry.id === conversation.id);
         if (!item) return;
-        item.messages.push({ role: 'human', text: input.value.trim(), createdAt: new Date().toISOString() });
+        item.messages.push({ role: 'human', text: replyText, createdAt: new Date().toISOString() });
         item.handoff = true; item.status = 'answered'; item.updatedAt = new Date().toISOString();
-        saveData(latest); refreshDashboard();
+        saveData(latest);
+        refreshDashboard(true);
       });
       const close = makeElement('button', 'button button-outline', 'Cerrar conversación'); close.type = 'button';
       close.addEventListener('click', () => {
         const latest = readData();
         const item = latest.conversations.find((entry) => entry.id === conversation.id);
-        if (item) { item.status = 'closed'; saveData(latest); refreshDashboard(); }
+        if (item) { item.status = 'closed'; saveData(latest); refreshDashboard(true); }
       });
       card.append(replyForm, close);
     }
@@ -104,9 +112,47 @@ function renderCustomers(data) {
   });
 }
 
-function refreshDashboard() {
+// La bandeja de fallas guarda la descripción y el estado de atención de cada reporte.
+function renderReports(data) {
+  const list = document.querySelector('#reports-list');
+  list.replaceChildren();
+  if (!data.reports.length) { list.append(makeElement('p', 'empty-orders', 'Todavía no hay reportes de fallas.')); return; }
+  data.reports.forEach((report) => {
+    const card = makeElement('article', `report-item${report.resolved ? ' is-resolved' : ''}`);
+    const heading = makeElement('div', 'report-heading');
+    heading.append(makeElement('h3', '', report.category || 'Reporte de problema'));
+    heading.append(makeElement('span', 'status-pill', report.resolved ? 'Atendido' : 'Pendiente'));
+    card.append(heading);
+    card.append(makeElement('p', '', `Página: ${report.page || 'No indicada'}`));
+    card.append(makeElement('p', 'report-description', report.description));
+    if (report.steps) card.append(makeElement('p', '', `Pasos para reproducirlo: ${report.steps}`));
+    if (report.contact) card.append(makeElement('p', '', `Contacto: ${report.contact}`));
+    card.append(makeElement('p', 'order-meta', `Enviado: ${report.createdAt}`));
+    const actions = makeElement('div', 'report-actions');
+    if (!report.resolved) {
+      const resolve = makeElement('button', 'button button-outline', 'Marcar atendido'); resolve.type = 'button';
+      resolve.addEventListener('click', () => {
+        const latest = readData();
+        const item = latest.reports.find((entry) => entry.id === report.id);
+        if (item) { item.resolved = true; saveData(latest); refreshDashboard(true); }
+      });
+      actions.append(resolve);
+    }
+    const remove = makeElement('button', 'delete-order', 'Eliminar reporte'); remove.type = 'button';
+    remove.addEventListener('click', () => {
+      const latest = readData();
+      latest.reports = latest.reports.filter((entry) => entry.id !== report.id);
+      saveData(latest); refreshDashboard(true);
+    });
+    actions.append(remove); card.append(actions); list.append(card);
+  });
+}
+
+function refreshDashboard(force = false) {
+  // Pausa el refresco automático mientras hay texto activo en la respuesta del chat.
+  if (!force && document.activeElement?.closest('.conversation-reply')) return;
   const data = readData();
-  renderOrders(data); renderConversations(data); renderCustomers(data);
+  renderOrders(data); renderConversations(data); renderCustomers(data); renderReports(data);
 }
 
 loginForm.addEventListener('submit', (event) => {
@@ -114,13 +160,13 @@ loginForm.addEventListener('submit', (event) => {
   const password = document.querySelector('#admin-password').value;
   if (password !== ADMIN_PASSWORD) { adminMessage.textContent = 'La contraseña no coincide.'; return; }
   adminMessage.textContent = '';
-  loginForm.hidden = true; dashboard.hidden = false; refreshDashboard();
+  loginForm.hidden = true; dashboard.hidden = false; refreshDashboard(true);
 });
 
 document.querySelector('#admin-logout').addEventListener('click', () => {
   dashboard.hidden = true; loginForm.hidden = false; loginForm.reset();
 });
-document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', refreshDashboard));
-window.addEventListener('storage', refreshDashboard);
-window.addEventListener('jossys-data-changed', refreshDashboard);
+document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true)));
+window.addEventListener('storage', () => refreshDashboard());
+window.addEventListener('jossys-data-changed', () => refreshDashboard());
 window.setInterval(() => { if (!dashboard.hidden) refreshDashboard(); }, 1500);

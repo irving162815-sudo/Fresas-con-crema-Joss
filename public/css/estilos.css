@@ -695,6 +695,101 @@ position:fixed;
   cursor:pointer;
   transition:.2s
 }
+
+/* Formulario público para avisar de errores en el sitio. */
+.report-page {
+  display: grid;
+  grid-template-columns: .85fr 1.15fr;
+  align-items: start;
+  gap: 9%;
+  background: #fffaf6;
+}
+.report-page h2 {
+  margin: 0;
+  font: 700 clamp(38px, 4.5vw, 54px)/1.1 var(--serif);
+  letter-spacing: -1px;
+}
+.report-page h2 em { color: var(--berry); }
+.report-page>div>p:not(.eyebrow):not(.privacy-note) {
+  max-width: 380px;
+  color: #806d65;
+  font-size: 13px;
+}
+.report-form {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  border-radius: 5px;
+  background: #f5e5dd;
+}
+.report-form label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.report-form label span {
+  color: #8c7770;
+  font-weight: 400;
+}
+.report-form input,.report-form select,.report-form textarea {
+  width: 100%;
+  margin: 0 0 15px;
+  padding: 12px;
+  border: 1px solid #e7d2c8;
+  border-radius: 3px;
+  background: #fffaf5;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+.report-form textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+.report-form textarea[name="steps"] { min-height: 70px; }
+.report-form .button { align-self: flex-start; }
+.report-item {
+  padding: 18px;
+  border: 1px solid #ead8cf;
+  border-radius: 5px;
+  background: white;
+}
+.report-item.is-resolved { opacity: .76; }
+.report-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.report-heading h3 {
+  margin: 0;
+  font: 700 18px var(--serif);
+}
+.report-item>p {
+  margin: 8px 0;
+  color: #725e56;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.report-item .report-description { white-space: pre-wrap; }
+.report-actions { display: flex; gap: 9px; align-items: center; }
+.footer-report-link {
+  justify-self: end;
+  padding: 8px 12px;
+  border: 1px solid #f5d27e;
+  border-radius: 20px;
+  color: #ffdf62;
+  font-size: 10px;
+  font-weight: 700;
+}
+.footer-report-link:hover { background: #ffdf62; color: #39241c; }
+@media(max-width:650px) {
+  .report-page { grid-template-columns: 1fr; gap: 22px; }
+  .report-page h2 { font-size: 40px; }
+  .report-form { padding: 21px; }
+  .report-heading { align-items: flex-start; }
+  .footer-report-link { justify-self: start; }
+}
 .assistant-launcher:hover {
 background:#dbaf05;
   color:var(--ink);
@@ -1693,4 +1788,40 @@ padding:20px 6%
   color: #386c43;
 }
 .form-message.is-error { color: #a52c51; }
+
+/* Atajo al panel del equipo, separado del menú de navegación. */
+.admin-corner {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 29;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #dfc8bb;
+  border-radius: 24px;
+  background: #fff9f3;
+  color: var(--ink);
+  box-shadow: 0 6px 20px #39241c20;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background .2s, transform .2s;
+}
+.admin-corner:hover {
+  background: var(--yellow);
+  transform: translateY(-3px);
+}
+@media(max-width:650px) {
+  .admin-corner {
+    left: 12px;
+    bottom: 14px;
+    padding: 11px 13px;
+    font-size: 10px;
+  }
+  .assistant-launcher {
+    right: 12px;
+    bottom: 14px;
+  }
+}
 
