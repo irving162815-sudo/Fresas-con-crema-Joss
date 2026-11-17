@@ -5,30 +5,35 @@ Sitio estático en HTML, CSS y JavaScript para abrir y editar en Visual Studio C
 ## Abrir en Visual Studio Code
 
 1. Abre la carpeta `Fresas-con-crema-Joss` en Visual Studio Code.
-2. En el explorador del proyecto, abre `public/index.html`.
+2. En el explorador del proyecto, abre `index.html` en la raíz del proyecto.
 3. Pulsa **Go Live** en la barra inferior de VS Code para previsualizar el sitio. La carpeta ya tiene configurado el puerto 5501 para Live Server.
-4. El panel separado está en `http://127.0.0.1:5501/public/admin.html`.
+4. El panel separado está en `http://127.0.0.1:5501/admin.html`.
 
 No hay un servidor Node independiente ni se instala nada con npm. La vista previa de VS Code mantiene todas las páginas bajo la misma dirección para que compartan el almacenamiento local.
 
 ## Páginas
 
-- `public/index.html`: bienvenida y página principal.
-- `public/menu.html`: productos y enlaces para elegir un sabor.
-- `public/sobre-nosotros.html`: descripción del emprendimiento y galería.
-- `public/redes.html`: Instagram y WhatsApp.
-- `public/registro.html`: formulario de cliente fiel.
-- `public/iniciar-sesion.html`: inicio de sesión con correo y contraseña de demostración.
-- `public/pedido.html`: pedido con dirección escrita o ubicación GPS.
-- `public/reportar.html`: formulario para avisar de una falla o error.
-- `public/admin.html`: página administrativa separada, no enlazada en la navegación pública.
+- `index.html`: bienvenida y página principal; está en la raíz para que GitHub Pages la encuentre.
+- `menu.html`: productos y enlaces para elegir un sabor.
+- `sobre-nosotros.html`: descripción del emprendimiento y galería.
+- `redes.html`: Instagram y WhatsApp.
+- `registro.html`: formulario de cliente fiel.
+- `iniciar-sesion.html`: inicio de sesión con correo y contraseña de demostración.
+- `pedido.html`: pedido con dirección escrita o ubicación GPS.
+- `reportar.html`: formulario para avisar de una falla o error.
+- `admin.html`: página administrativa separada, no enlazada en la navegación pública.
 - Las páginas públicas tienen un botón flotante **Acceso admin** en la esquina inferior izquierda.
-- `public/assets/favicon.png`: versión pequeña del logo usada como icono de pestaña.
-- `public/css/estilos.css`: diseño, colores, adaptación móvil y animaciones.
-- `public/js/site.js`: encabezado, pie y diseño compartido entre páginas.
-- `public/js/public-app.js`: pedidos, cuentas, consentimiento de promociones, reportes y respuestas del chatbot.
-- `public/js/site.js`: también muestra el nombre del usuario conectado y permite cerrar sesión.
-- `public/js/admin.js`: bandeja de pedidos, chats, fallas, clientes y campañas promocionales.
+- `assets/favicon.png`: versión pequeña del logo usada como icono de pestaña.
+- `css/estilos.css`: diseño, colores, adaptación móvil y animaciones.
+- `js/site.js`: encabezado, pie y diseño compartido entre páginas; también muestra el nombre del usuario conectado y permite cerrar sesión.
+- `js/public-app.js`: pedidos, cuentas, consentimiento de promociones, reportes y respuestas del chatbot.
+- `js/admin.js`: bandeja de pedidos, chats, fallas, clientes y campañas promocionales.
+
+## Publicar en GitHub Pages
+
+El sitio ya tiene `index.html` y todas sus páginas, estilos, scripts e imágenes en la raíz del repositorio. El flujo de GitHub Actions de `.github/workflows/static.yml` publica esa raíz automáticamente al subir cambios a la rama `main`. Después de confirmar y subir los archivos a GitHub, revisa la pestaña **Actions** para ver la publicación y configura **Settings → Pages** para usar **GitHub Actions** como origen.
+
+Si Pages todavía muestra 404, confirma que los cambios estén subidos a la rama `main` y que la ejecución **Deploy static content to Pages** haya terminado correctamente.
 
 La bandeja de administración muestra estos reportes y permite marcarlos como atendidos. El chat ya no se vuelve a dibujar mientras escribes una respuesta; al enviarla, se guarda en la conversación local.
 
