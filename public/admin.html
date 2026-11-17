@@ -41,7 +41,7 @@
 </form>
 <div id="admin-dashboard" hidden>
 <div class="admin-toolbar">
-<p id="admin-status">Sesión segura activa</p>
+<p id="admin-status">Panel local de demostración activo</p>
 <button class="button button-outline" id="admin-logout" type="button">Cerrar sesión</button>
 </div>
 <section>
@@ -86,6 +86,28 @@
 </div>
 <div id="customers-list" class="customers-list">
 </div>
+</section>
+<section>
+<div class="section-heading">
+<div>
+<p class="eyebrow">BENEFICIOS PARA CLIENTES</p>
+<h2>Promociones por correo</h2>
+</div>
+</div>
+<p class="campaign-note">Solo incluimos a clientes que marcaron que desean recibir promociones. Puedes abrir un borrador con las direcciones ocultas y enviarlo desde tu programa de correo, o exportar la lista autorizada. Revisa y confirma el envío en tu programa de correo.</p>
+<button class="button button-outline" id="export-subscribers" type="button">Exportar correos con permiso</button>
+<button class="button button-outline" id="open-campaign-email" type="button">Abrir correo para suscriptores</button>
+<form class="campaign-form" id="promotion-form">
+<label for="promotion-title">Nombre de la campaña</label>
+<input id="promotion-title" name="title" required maxlength="80" placeholder="Oferta de temporada">
+<label for="promotion-subject">Asunto del correo</label>
+<input id="promotion-subject" name="subject" required maxlength="120" placeholder="Una oferta dulce para ti">
+<label for="promotion-message-body">Texto de la promoción</label>
+<textarea id="promotion-message-body" name="message" required maxlength="1500" placeholder="Escribe el beneficio o la oferta…"></textarea>
+<button class="button button-dark" type="submit">Preparar campaña <span>→</span></button>
+<p class="form-message" id="promotion-message" role="status" aria-live="polite"></p>
+</form>
+<div id="promotions-list" class="promotions-list"></div>
 </section>
 </div>
 </section>

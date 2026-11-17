@@ -18,6 +18,7 @@ No hay un servidor Node independiente ni se instala nada con npm. La vista previ
 - `public/sobre-nosotros.html`: descripción del emprendimiento y galería.
 - `public/redes.html`: Instagram y WhatsApp.
 - `public/registro.html`: formulario de cliente fiel.
+- `public/iniciar-sesion.html`: inicio de sesión con correo y contraseña de demostración.
 - `public/pedido.html`: pedido con dirección escrita o ubicación GPS.
 - `public/reportar.html`: formulario para avisar de una falla o error.
 - `public/admin.html`: página administrativa separada, no enlazada en la navegación pública.
@@ -25,8 +26,9 @@ No hay un servidor Node independiente ni se instala nada con npm. La vista previ
 - `public/assets/favicon.png`: versión pequeña del logo usada como icono de pestaña.
 - `public/css/estilos.css`: diseño, colores, adaptación móvil y animaciones.
 - `public/js/site.js`: encabezado, pie y diseño compartido entre páginas.
-- `public/js/public-app.js`: pedidos, registros y respuestas del chatbot.
-- `public/js/admin.js`: inicio de sesión y bandeja de demostración.
+- `public/js/public-app.js`: pedidos, cuentas, consentimiento de promociones, reportes y respuestas del chatbot.
+- `public/js/site.js`: también muestra el nombre del usuario conectado y permite cerrar sesión.
+- `public/js/admin.js`: bandeja de pedidos, chats, fallas, clientes y campañas promocionales.
 
 La bandeja de administración muestra estos reportes y permite marcarlos como atendidos. El chat ya no se vuelve a dibujar mientras escribes una respuesta; al enviarla, se guarda en la conversación local.
 
@@ -34,9 +36,15 @@ La bandeja de administración muestra estos reportes y permite marcarlos como at
 
 El chatbot responde con reglas y respuestas preparadas, usando el tono de Jossy’s Berry PTY. Conoce la descripción de la marca, los sabores y los teléfonos. No inventa precios, horarios, zonas de entrega ni ingredientes no confirmados. Si no reconoce una consulta o le piden una persona, la guarda en la bandeja de administración; el administrador puede contestar desde la página de chat.
 
+## Cuentas y promociones por correo
+
+El encabezado tiene **Iniciar sesión**. Las cuentas incluyen nombre, correo, teléfono y contraseña de demostración; el encabezado muestra el nombre después de iniciar sesión. La casilla para recibir promociones es opcional y no viene marcada. En Admin se puede redactar una campaña, preparar un borrador en el programa de correo con las direcciones de clientes suscritos en copia oculta y exportar una lista CSV de quienes aceptaron recibir ofertas. La persona administradora debe revisar y enviar el correo manualmente.
+
+Como no hay servidor, las cuentas y los correos solo están en el navegador donde se registraron. El inicio de sesión no protege una cuenta real y el borrador por correo depende de que el equipo tenga una aplicación de correo configurada. Para cuentas compartidas y envíos automáticos haría falta un servicio seguro de cuentas y correo.
+
 ## Alcance de esta versión
 
-Pedidos, registros y conversaciones se guardan en el almacenamiento local del navegador para la demostración. Conviene abrir todas las páginas bajo la misma vista previa de Visual Studio Code para que compartan ese almacenamiento. Si se abre cada HTML directamente como archivo, el navegador puede no compartir datos entre ellos.
+Pedidos, registros, cuentas, preferencias de promociones, conversaciones, campañas y reportes se guardan en el almacenamiento local del navegador para la demostración. Conviene abrir todas las páginas bajo la misma vista previa de Visual Studio Code para que compartan ese almacenamiento. Si se abre cada HTML directamente como archivo, el navegador puede no compartir datos entre ellos.
 
 El acceso `ADMINPTY507` es únicamente una barrera visual de demostración: la clave está en JavaScript y se puede ver. No protege datos reales ni sirve para atender pedidos de clientes por Internet. GitHub puede alojar esta versión estática, pero pedidos compartidos entre clientes, una bandeja central segura y cuentas protegidas requieren un backend y almacenamiento seguro, que esta versión no incluye.
 

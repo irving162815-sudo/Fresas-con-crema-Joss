@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Inicia sesión en tu cuenta de cliente fiel de Jossy’s Berry PTY.">
+<title>Iniciar sesión | Jossy’s Berry PTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/site.js" defer></script>
+<script src="js/public-app.js" defer></script>
+<link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
+</head>
+<body data-page="login">
+<div data-partial="header"></div>
+<main>
+  <section class="page-banner">
+    <p class="eyebrow">QUÉ GUSTO VERTE DE NUEVO</p>
+    <h1>Iniciar <em>sesión</em></h1>
+    <p>Entra a tu cuenta de cliente fiel de Jossy’s Berry PTY.</p>
+  </section>
+  <section class="section-wrap form-page">
+    <div>
+      <h2>Tu próximo<br>antojo te <em>espera.</em></h2>
+      <p>Usa el mismo correo electrónico y contraseña con que creaste tu cuenta.</p>
+      <p class="privacy-note">En esta versión de demostración, las cuentas solo existen en el almacenamiento local de este navegador.</p>
+    </div>
+    <form class="loyalty-form" id="login-form">
+      <label for="login-email">Correo electrónico</label>
+      <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="nombre@correo.com">
+      <label for="login-password">Contraseña</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña">
+      <button class="button button-dark" type="submit">Iniciar sesión <span>→</span></button>
+      <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
+      <p class="auth-switch">¿Todavía no tienes cuenta? <a href="registro.html">Regístrate</a>.</p>
+    </form>
+  </section>
+</main>
+<div data-partial="footer"></div>
+<div data-partial="assistant"></div>
+</body>
+</html>

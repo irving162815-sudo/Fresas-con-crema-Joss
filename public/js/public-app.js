@@ -9,10 +9,11 @@ function readData() {
       orders: Array.isArray(value.orders) ? value.orders : [],
       customers: Array.isArray(value.customers) ? value.customers : [],
       conversations: Array.isArray(value.conversations) ? value.conversations : [],
-      reports: Array.isArray(value.reports) ? value.reports : []
+      reports: Array.isArray(value.reports) ? value.reports : [],
+      promotions: Array.isArray(value.promotions) ? value.promotions : []
     };
   } catch {
-    return { orders: [], customers: [], conversations: [], reports: [] };
+    return { orders: [], customers: [], conversations: [], reports: [], promotions: [] };
   }
 }
 
@@ -25,6 +26,20 @@ function showMessage(element, text, isError = false) {
   if (!element) return;
   element.textContent = text;
   element.classList.toggle('is-error', isError);
+}
+
+// Resume una contraseña para el prototipo; esto no convierte la cuenta estática en seguridad real.
+function createPasswordSalt() {
+  if (!window.crypto?.getRandomValues) throw new Error('Abre el sitio desde Go Live en Visual Studio Code para crear tu cuenta.');
+  const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPassword(password, salt) {
+  if (!window.crypto?.subtle) throw new Error('Abre el sitio desde Go Live en Visual Studio Code para iniciar sesión.');
+  const bytes = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 // Deja marcado el producto escogido desde la página del menú.
@@ -88,6 +103,52 @@ document.querySelector('#loyalty-form')?.addEventListener('submit', (event) => {
   saveData(data);
   showMessage(document.querySelector('#loyalty-message'), `¡Bienvenido/a, ${fields.name}! Tu registro quedó guardado en este navegador.`);
   event.currentTarget.reset();
+});
+
+// Crea la cuenta local y guarda por separado el permiso opcional para promociones.
+document.querySelector('#register-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const fields = Object.fromEntries(new FormData(form));
+  const email = fields.email.trim().toLowerCase();
+  const data = readData();
+  const message = document.querySelector('#register-message');
+  if (data.customers.some((customer) => customer.email === email)) {
+    showMessage(message, 'Ya existe una cuenta con ese correo. Inicia sesión.', true);
+    return;
+  }
+  try {
+    const passwordSalt = createPasswordSalt();
+    const passwordHash = await hashPassword(fields.password, passwordSalt);
+    data.customers.unshift({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      name: fields.name.trim(), email, phone: fields.phone.trim(), passwordSalt, passwordHash,
+      marketingConsent: fields.promotions === 'on', createdAt: new Date().toLocaleString('es-PA')
+    });
+    saveData(data);
+    localStorage.setItem('jossysBerrySignedIn', email);
+    window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+    showMessage(message, '¡Cuenta creada! Abriendo la página principal…');
+    window.setTimeout(() => { window.location.href = 'index.html'; }, 500);
+  } catch (error) { showMessage(message, error.message, true); }
+});
+
+// Comprueba el correo y la contraseña contra las cuentas locales de esta demostración.
+document.querySelector('#login-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const fields = Object.fromEntries(new FormData(event.currentTarget));
+  const email = fields.email.trim().toLowerCase();
+  const message = document.querySelector('#login-message');
+  try {
+    const customer = readData().customers.find((item) => item.email === email);
+    const passwordHash = customer ? await hashPassword(fields.password, customer.passwordSalt) : '';
+    const isCorrectPassword = customer && passwordHash === customer.passwordHash;
+    if (!isCorrectPassword) { showMessage(message, 'El correo o la contraseña no coinciden.', true); return; }
+    localStorage.setItem('jossysBerrySignedIn', email);
+    window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+    showMessage(message, `¡Hola, ${customer.name}! Iniciando sesión…`);
+    window.setTimeout(() => { window.location.href = 'index.html'; }, 500);
+  } catch (error) { showMessage(message, error.message, true); }
 });
 
 // Guarda los avisos de fallas en el mismo espacio local que consulta la página Admin.

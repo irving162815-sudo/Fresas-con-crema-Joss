@@ -790,6 +790,77 @@ position:fixed;
   .report-heading { align-items: flex-start; }
   .footer-report-link { justify-self: start; }
 }
+
+/* Account controls in the shared header. */
+#account-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.login-link,.sign-out-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 12px;
+  border: 1px solid #dfc8bb;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: 700 11px var(--sans);
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+.login-link:hover,.sign-out-button:hover {
+  background: var(--yellow);
+  transform: translateY(-2px);
+}
+.signed-in-name {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--berry);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth-switch { margin: 14px 0 0; color: #806d65; font-size: 11px; }
+.auth-switch a { color: var(--berry); font-weight: 700; }
+.campaign-note {
+  max-width: 760px;
+  margin: -12px 0 16px;
+  color: #806d65;
+  font-size: 12px;
+}
+.campaign-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
+  gap: 7px;
+  margin: 18px 0;
+  padding: 22px;
+  border-radius: 5px;
+  background: #f5e5dd;
+}
+.campaign-form label { font-size: 11px; font-weight: 700; }
+.campaign-form input,.campaign-form textarea {
+  width: 100%;
+  margin: 0 0 9px;
+  padding: 11px;
+  border: 1px solid #e7d2c8;
+  border-radius: 3px;
+  background: #fffaf5;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+.campaign-form textarea { min-height: 105px; resize: vertical; }
+.campaign-form .button { align-self: flex-start; }
+.promotions-list { display: grid; gap: 10px; margin-top: 15px; }
+@media(max-width:650px) {
+  #account-area { align-items: stretch; flex-direction: column; }
+  .login-link,.sign-out-button { justify-content: center; }
+  .signed-in-name { max-width: 100%; }
+  .campaign-form { padding: 18px; }
+}
 .assistant-launcher:hover {
 background:#dbaf05;
   color:var(--ink);

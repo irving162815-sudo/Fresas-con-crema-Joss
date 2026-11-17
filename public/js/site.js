@@ -8,6 +8,25 @@ const publicPages = [
   ['register', 'registro.html', 'Cliente fiel']
 ];
 
+function readSignedInCustomer() {
+  try {
+    const email = localStorage.getItem('jossysBerrySignedIn');
+    const data = JSON.parse(localStorage.getItem('jossysBerryDemoData') || '{}');
+    return (data.customers || []).find((customer) => customer.email === email) || null;
+  } catch { return null; }
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
+function makeAccountLink(activePage) {
+  const customer = readSignedInCustomer();
+  return customer
+    ? `<span class="signed-in-name">Hola, ${escapeHTML(customer.name)}</span><button class="sign-out-button" id="sign-out" type="button">Salir</button>`
+    : `<a class="login-link${activePage === 'login' ? ' active' : ''}" href="iniciar-sesion.html">Iniciar sesión</a>`;
+}
+
 function makeHeader() {
   const activePage = document.body.dataset.page;
   const links = publicPages.map(([page, file, label]) => {
@@ -19,7 +38,7 @@ function makeHeader() {
   return `<header class="site-header">
     <a class="brand" href="index.html" aria-label="Jossy’s Berry PTY, inicio"><img src="assets/logo-jossys-berry.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
     <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-nav"><span></span><span></span><span></span></button>
-    <nav id="main-nav" class="main-nav" aria-label="Navegación principal">${links}</nav>
+    <nav id="main-nav" class="main-nav" aria-label="Navegación principal">${links}<span id="account-area">${makeAccountLink(activePage)}</span></nav>
   </header>`;
 }
 
@@ -30,8 +49,8 @@ function makeFooter() {
       <a class="social-link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="ig-dot" cx="18" cy="6" r="1"/></svg> Instagram</a>
       <a class="social-link" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer">WhatsApp 6434-7297</a>
       <a class="social-link" href="https://wa.me/50766260366" target="_blank" rel="noopener noreferrer">WhatsApp 6626-0366</a>
+      <a class="footer-report-link" href="reportar.html">Reportar una falla</a>
     </div><p class="copyright">© <span data-year></span> Jossy’s Berry PTY · Frescura y dulzura</p>
-    <a class="footer-report-link" href="reportar.html">Reportar una falla</a>
   </footer>`;
 }
 
@@ -51,6 +70,21 @@ document.querySelector('[data-partial="header"]')?.insertAdjacentHTML('afterbegi
 document.querySelector('[data-partial="footer"]')?.insertAdjacentHTML('afterbegin', makeFooter());
 document.querySelector('[data-partial="assistant"]')?.insertAdjacentHTML('afterbegin', makeAssistant());
 document.querySelectorAll('[data-year]').forEach((year) => { year.textContent = new Date().getFullYear(); });
+
+// Al iniciar o cerrar sesión, actualiza el nombre visible en el encabezado.
+window.addEventListener('jossys-data-changed', () => {
+  const accountArea = document.querySelector('#account-area');
+  if (!accountArea) return;
+  accountArea.innerHTML = makeAccountLink(document.body.dataset.page);
+  document.querySelector('#sign-out')?.addEventListener('click', signOut);
+});
+
+function signOut() {
+  localStorage.removeItem('jossysBerrySignedIn');
+  window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+}
+
+document.querySelector('#sign-out')?.addEventListener('click', signOut);
 
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');

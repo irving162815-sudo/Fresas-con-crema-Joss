@@ -10,9 +10,10 @@ function readData() {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     return {
       orders: value.orders || [], customers: value.customers || [],
-      conversations: value.conversations || [], reports: value.reports || []
+      conversations: value.conversations || [], reports: value.reports || [],
+      promotions: value.promotions || []
     };
-  } catch { return { orders: [], customers: [], conversations: [], reports: [] }; }
+  } catch { return { orders: [], customers: [], conversations: [], reports: [], promotions: [] }; }
 }
 
 function saveData(data) {
@@ -107,7 +108,22 @@ function renderCustomers(data) {
   if (!data.customers.length) { list.append(makeElement('p', 'empty-orders', 'Aún no hay registros de clientes en este navegador.')); return; }
   data.customers.forEach((customer) => {
     const item = makeElement('article', 'customer-item');
-    item.append(makeElement('b', '', customer.name), makeElement('p', '', `WhatsApp: ${customer.phone} · ${customer.createdAt}`));
+    const info = makeElement('div');
+    info.append(makeElement('b', '', customer.name));
+    info.append(makeElement('p', '', `Correo: ${customer.email || 'No registrado'}`));
+    info.append(makeElement('p', '', `WhatsApp: ${customer.phone || 'No registrado'} · ${customer.createdAt || ''}`));
+    const status = makeElement('span', 'status-pill', customer.marketingConsent ? 'Acepta promociones' : 'Sin permiso de promociones');
+    item.append(info, status);
+    if (customer.marketingConsent) {
+      const unsubscribe = makeElement('button', 'delete-order', 'Retirar permiso');
+      unsubscribe.type = 'button';
+      unsubscribe.addEventListener('click', () => {
+        const latest = readData();
+        const entry = latest.customers.find((record) => record.email === customer.email);
+        if (entry) { entry.marketingConsent = false; saveData(latest); refreshDashboard(true); }
+      });
+      item.append(unsubscribe);
+    }
     list.append(item);
   });
 }
@@ -148,11 +164,25 @@ function renderReports(data) {
   });
 }
 
+function renderPromotions(data) {
+  const list = document.querySelector('#promotions-list');
+  list.replaceChildren();
+  if (!data.promotions.length) { list.append(makeElement('p', 'empty-orders', 'Aún no has preparado una promoción.')); return; }
+  data.promotions.forEach((promotion) => {
+    const item = makeElement('article', 'report-item');
+    item.append(makeElement('h3', '', promotion.title));
+    item.append(makeElement('p', '', `Asunto: ${promotion.subject}`));
+    item.append(makeElement('p', '', `Personas suscritas incluidas: ${promotion.recipientCount}`));
+    item.append(makeElement('p', 'order-meta', `Preparada: ${promotion.createdAt}`));
+    list.append(item);
+  });
+}
+
 function refreshDashboard(force = false) {
   // Pausa el refresco automático mientras hay texto activo en la respuesta del chat.
   if (!force && document.activeElement?.closest('.conversation-reply')) return;
   const data = readData();
-  renderOrders(data); renderConversations(data); renderCustomers(data); renderReports(data);
+  renderOrders(data); renderConversations(data); renderCustomers(data); renderReports(data); renderPromotions(data);
 }
 
 loginForm.addEventListener('submit', (event) => {
@@ -167,6 +197,65 @@ document.querySelector('#admin-logout').addEventListener('click', () => {
   dashboard.hidden = true; loginForm.hidden = false; loginForm.reset();
 });
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true)));
+
+// Prepara el texto de una campaña y cuenta solo a clientes que aceptaron recibir promociones.
+document.querySelector('#promotion-form')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const fields = Object.fromEntries(new FormData(event.currentTarget));
+  const data = readData();
+  const recipientCount = data.customers.filter((customer) => customer.marketingConsent === true && customer.email).length;
+  data.promotions.unshift({
+    id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    title: fields.title.trim(), subject: fields.subject.trim(), message: fields.message.trim(),
+    recipientCount, createdAt: new Date().toLocaleString('es-PA')
+  });
+  saveData(data);
+  document.querySelector('#promotion-message').textContent = `Campaña preparada para ${recipientCount} persona(s) que aceptaron promociones. Esta versión no envía correos.`;
+  event.currentTarget.reset();
+  refreshDashboard(true);
+});
+
+// Descarga únicamente los correos de clientes que marcaron la casilla de promociones.
+document.querySelector('#export-subscribers')?.addEventListener('click', () => {
+  const subscribers = readData().customers.filter((customer) => customer.marketingConsent === true && customer.email);
+  if (!subscribers.length) {
+    document.querySelector('#promotion-message').textContent = 'Todavía no hay clientes que hayan aceptado recibir promociones.';
+    return;
+  }
+  const escapeCsv = (value) => `"${String(value || '').replaceAll('"', '""')}"`;
+  const rows = [['Nombre', 'Correo'], ...subscribers.map((customer) => [customer.name, customer.email])];
+  const csv = `\uFEFF${rows.map((row) => row.map(escapeCsv).join(',')).join('\r\n')}`;
+  const file = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const download = document.createElement('a');
+  download.href = file; download.download = 'clientes-que-aceptan-promociones.csv'; download.click();
+  URL.revokeObjectURL(file);
+  document.querySelector('#promotion-message').textContent = `Se descargó la lista de ${subscribers.length} contacto(s) con permiso.`;
+});
+
+// Abre un borrador en el programa de correo; la persona administradora revisa y envía.
+document.querySelector('#open-campaign-email')?.addEventListener('click', () => {
+  const form = document.querySelector('#promotion-form');
+  if (!form.reportValidity()) return;
+  const fields = Object.fromEntries(new FormData(form));
+  const subscribers = readData().customers.filter((customer) => customer.marketingConsent === true && customer.email);
+  const message = document.querySelector('#promotion-message');
+  if (!subscribers.length) {
+    message.textContent = 'Todavía no hay clientes que hayan aceptado recibir promociones.';
+    return;
+  }
+  const bcc = subscribers.map((customer) => customer.email).join(',');
+  const body = `${fields.message.trim()}\n\nJossy’s Berry PTY · Frescura y dulzura`;
+  const mailto = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(fields.subject.trim())}&body=${encodeURIComponent(body)}`;
+  if (mailto.length > 1800) {
+    message.textContent = 'Hay muchos destinatarios para abrirlos juntos. Exporta la lista autorizada y úsala en tu servicio de correo.';
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = mailto;
+  link.click();
+  message.textContent = `Se preparó un borrador con ${subscribers.length} destinatario(s) ocultos. Revísalo y pulsa Enviar en tu programa de correo.`;
+});
+
 window.addEventListener('storage', () => refreshDashboard());
 window.addEventListener('jossys-data-changed', () => refreshDashboard());
 window.setInterval(() => { if (!dashboard.hidden) refreshDashboard(); }, 1500);
