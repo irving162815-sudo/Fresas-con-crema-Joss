@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Haz tu pedido de fresas con crema a Jossy’s Berry PTY.">
+<title>Haz tu pedido | Jossy’s Berry PTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/site.js" defer>
+</script>
+<script src="js/public-app.js" defer>
+</script>
+</head>
+<body data-page="order">
+<div data-partial="header">
+</div>
+<main>
+<section class="page-banner">
+<p class="eyebrow">TU ANTOJITO TE ESPERA</p>
+<h1>Haz tu <em>pedido</em>
+</h1>
+<p>Cuéntanos qué sabor quieres y dónde te lo llevamos.</p>
+</section>
+<section class="section-wrap order-page">
+<div>
+<h2>Fresco, rico<br>y hecho <em>para ti.</em>
+</h2>
+<p>Completa los datos y el equipo revisará tu pedido. Si compartes tu ubicación, el mapa aparecerá aquí antes de enviarlo.</p>
+<p class="privacy-note">Usaremos la dirección para coordinar la entrega. Si compartes GPS, OpenStreetMap recibe las coordenadas para mostrar el mapa.</p>
+</div>
+<form class="order-form" id="order-form">
+<label for="customer-name">Nombre</label>
+<input id="customer-name" name="name" autocomplete="name" required maxlength="60" placeholder="Tu nombre">
+<label for="customer-phone">Teléfono de contacto</label>
+<input id="customer-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de WhatsApp">
+<label for="flavor-choice">Producto</label>
+<select id="flavor-choice" name="flavor" required>
+<option value="" disabled selected>Selecciona un sabor</option>
+<option>La Clásica</option>
+<option>La Crocantita</option>
+<option>La Consentida</option>
+</select>
+<label for="delivery-address">Dirección escrita</label>
+<textarea id="delivery-address" name="address" autocomplete="street-address" required maxlength="250" placeholder="Calle, corregimiento y punto de referencia">
+</textarea>
+<button class="location-button" type="button" id="location-button">◎ Compartir mi ubicación GPS</button>
+<p class="location-status" id="location-status" aria-live="polite">También puedes escribir tu dirección arriba.</p>
+<div class="map-wrap" id="map-wrap" hidden>
+<iframe id="location-map" title="Mapa de ubicación de entrega" loading="lazy">
+</iframe>
+</div>
+<input type="hidden" id="latitude" name="latitude">
+<input type="hidden" id="longitude" name="longitude">
+<label class="check-label">
+<input type="checkbox" name="consent" required> Acepto compartir estos datos con Jossy’s Berry para atender mi pedido.</label>
+<button class="button button-dark form-button" type="submit">Enviar pedido <span>♡</span>
+</button>
+<p class="form-message" id="order-message" role="status" aria-live="polite">
+</p>
+</form>
+</section>
+</main>
+<div data-partial="footer">
+</div>
+<div data-partial="assistant">
+</div>
+</body>
+</html>
+
+

@@ -1,4 +1,4 @@
-const ADMIN_PASSWORD = 'ADMINPTY507'; // Acceso de demostración: no es autenticación segura para producción.
+const ADMIN_PASSWORD = 'CLAVE_DEMO_ANTERIOR_NO_USAR'; // Acceso de demostración: no es autenticación segura para producción.
 const ORDERS_KEY = 'jossysBerryDemoOrders';
 const CUSTOMERS_KEY = 'jossysBerryDemoCustomers';
 
@@ -217,3 +217,4 @@ document.querySelectorAll('[data-question]').forEach((button) => button.addEvent
 }));
 
 document.querySelector('#year').textContent = new Date().getFullYear();
+

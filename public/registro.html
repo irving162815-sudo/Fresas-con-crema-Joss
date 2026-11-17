@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Regístrate en el club de clientes fieles de Jossy’s Berry PTY.">
+<title>Cliente fiel | Jossy’s Berry PTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/site.js" defer>
+</script>
+<script src="js/public-app.js" defer>
+</script>
+</head>
+<body data-page="register">
+<div data-partial="header">
+</div>
+<main>
+<section class="page-banner">
+<p class="eyebrow">UN CLUB DULCE</p>
+<h1>Clientes <em>fieles</em>
+</h1>
+<p>Déjanos tus datos y te saludaremos en tu próximo antojo.</p>
+</section>
+<section class="section-wrap form-page">
+<div>
+<h2>Más momentos<br>
+<em>deliciosos.</em>
+</h2>
+<p>Regístrate para que el equipo de Jossy’s Berry PTY pueda reconocerte cuando vuelvas.</p>
+<p class="privacy-note">Usaremos estos datos solo para atender tu registro y pedidos de la marca.</p>
+</div>
+<form class="loyalty-form" id="loyalty-form">
+<label for="loyalty-name">Nombre</label>
+<input id="loyalty-name" name="name" autocomplete="name" required maxlength="60" placeholder="¿Cómo te llamas?">
+<label for="loyalty-phone">WhatsApp</label>
+<input id="loyalty-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de teléfono">
+<label class="check-label">
+<input type="checkbox" name="consent" required> Acepto que Jossy’s Berry use mis datos para gestionar este registro.</label>
+<button class="button button-dark" type="submit">Quiero ser cliente fiel <span>♡</span>
+</button>
+<p class="form-message" id="loyalty-message" role="status" aria-live="polite">
+</p>
+</form>
+</section>
+</main>
+<div data-partial="footer">
+</div>
+<div data-partial="assistant">
+</div>
+</body>
+</html>
+
+

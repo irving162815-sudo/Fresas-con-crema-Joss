@@ -1,0 +1,6 @@
+# Nunca subir claves ni datos de clientes a GitHub.
+.env
+data/*.json
+data/*.tmp
+node_modules/
+npm-debug.log*
