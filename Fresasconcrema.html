@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f2">
+  <meta name="description" content="Fresas con crema frescas, deliciosas y accesibles. Conoce nuestro emprendimiento y descubre el sabor de la dulzura natural.">
+  <title>Fresas con Crema | El sabor de la dulzura natural</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="Estilofresas.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Fresas con Crema, inicio"><span class="brand-mark">♥</span> Fresas<span class="brand-light"> con crema</span><span class="brand-dot">.</span></a>
+    <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-nav"><span></span><span></span><span></span></button>
+    <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
+      <a href="#inicio">Inicio</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle" type="button" aria-expanded="false" aria-controls="section-menu">Explorar <span class="chevron">⌄</span></button>
+        <div class="dropdown-menu" id="section-menu">
+          <a href="#emprendimiento">Sobre el emprendimiento</a>
+          <a href="#menu">Nuestro menú</a>
+          <a href="#galeria">Galería</a>
+          <a href="#pedido">Pedidos</a>
+        </div>
+      </div>
+      <a class="nav-cta" href="#pedido">Hacer un pedido <span>↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio" aria-labelledby="hero-title">
+      <div class="hero-photo" role="img" aria-label="Tazón de fresas frescas con crema"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="hero-eyebrow"><span></span> FRESCO · DELICIOSO · HECHO CON CARIÑO</p>
+        <h1 id="hero-title">Fresas<br>con <em>crema</em></h1>
+        <p>El sabor de la dulzura natural.</p>
+        <a href="#menu" class="button button-light">Descubre nuestro menú <span>↓</span></a>
+      </div>
+      <a class="scroll-hint" href="#emprendimiento">CONOCE NUESTRO EMPRENDIMIENTO <span>↓</span></a>
+      <span class="hero-stamp" aria-hidden="true">FRESCO<br><b>♡</b><br>Y NATURAL</span>
+    </section>
+
+    <section class="ticker" aria-label="Lo mejor de nuestras fresas con crema"><div>FRUTAS FRESCAS <span>✳</span> SABOR ÚNICO <span>✳</span> BUEN SERVICIO <span>✳</span> MOMENTOS FELICES <span>✳</span> FRUTAS FRESCAS <span>✳</span> SABOR ÚNICO <span>✳</span></div></section>
+
+    <section class="business section-wrap" id="emprendimiento">
+      <div class="business-heading"><p class="eyebrow">CONOCE NUESTRA IDEA</p><h2>Un postre rico,<br><em>hecho para compartir.</em></h2><span class="business-heart">♡</span></div>
+      <div class="business-copy"><p class="eyebrow">NUESTRO EMPRENDIMIENTO</p><p class="business-description">Nuestro emprendimiento se dedica a la elaboración y venta de deliciosas fresas con crema, preparadas con frutas frescas y de alta calidad. Ofrecemos un producto con un sabor único, presentado de forma atractiva e ideal para cualquier ocasión. Nuestro objetivo es brindar a los clientes un postre fresco, delicioso y accesible, garantizando siempre higiene, buen servicio y una excelente experiencia en cada compra.</p><div class="values"><span>♡ Fruta fresca</span><span>♡ Higiene y calidad</span><span>♡ Buen servicio</span></div></div>
+    </section>
+
+    <section class="flavors section-wrap" id="menu">
+      <div class="section-heading"><div><p class="eyebrow">PREPARADAS PARA DISFRUTAR</p><h2>Nuestro <em>menú</em></h2></div><p class="section-intro">Fresas seleccionadas, crema deliciosa y una presentación hecha para antojarte.</p></div>
+      <div class="flavor-grid">
+        <article class="flavor-card card-pink"><div class="flavor-number">01</div><div class="mini-cup mini-classic"><span>🍓</span><b>♡</b></div><p class="card-tag">LA FAVORITA</p><h3>La Clásica</h3><p>Fresas frescas con nuestra crema dulce y suave.</p><div class="card-bottom"><span>Un clásico que nunca falla</span><span class="card-heart">♡</span></div></article>
+        <article class="flavor-card card-yellow"><div class="flavor-number">02</div><div class="mini-cup mini-crunch"><span>🍓</span><b>✦</b></div><p class="card-tag">UN TOQUE CRUJIENTE</p><h3>La Crocantita</h3><p>Fresas con crema y un toque crujiente irresistible.</p><div class="card-bottom"><span>Textura en cada cucharada</span><span class="card-heart">♡</span></div></article>
+        <article class="flavor-card card-green"><div class="flavor-number">03</div><div class="mini-cup mini-special"><span>🍓</span><b>✳</b></div><p class="card-tag">UN GUSTITO ESPECIAL</p><h3>La Consentida</h3><p>Nuestra combinación especial para darte un gusto extra.</p><div class="card-bottom"><span>Un poquito más de felicidad</span><span class="card-heart">♡</span></div></article>
+      </div>
+      <p class="menu-note">Los sabores y complementos pueden ajustarse a lo que tengamos disponible. <a href="#pedido">Consulta y haz tu pedido ↗</a></p>
+    </section>
+
+    <section class="gallery section-wrap" id="galeria">
+      <div class="section-heading"><div><p class="eyebrow">UNA MIRADA DULCE</p><h2>Frescas y <em>deliciosas.</em></h2></div><p class="section-intro">Un vistazo a la dulzura y frescura que inspiran nuestro emprendimiento.</p></div>
+      <div class="gallery-grid">
+        <figure class="gallery-feature"><img src="Imagenes%20de%20la%20pagina/WhatsApp%20Image%202026-11-17%20at%202.42.20%20PM.jpeg" alt="Fresas con crema servidas en un tazón"><figcaption>Nuestro antojo favorito <span>♡</span></figcaption></figure>
+        <figure class="gallery-small"><img src="Imagenes%20de%20la%20pagina/Strawberry%20Cake%20GIF.gif" alt="Pastel decorado con fresas, inspiración dulce"><figcaption>Inspiración con fresas</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="order section-wrap" id="pedido"><div class="order-copy"><p class="eyebrow">TU ANTOJITO TE ESPERA</p><h2>¿Se te hizo<br>agua la <em>boca?</em></h2><p>Déjanos tu nombre y el sabor que prefieres. ¡Nos encantará preparar algo rico para ti!</p><div class="order-doodle">🍓 <span>♡</span></div></div><form class="order-form" id="order-form"><label for="customer-name">¿Cómo te llamas?</label><input id="customer-name" name="name" type="text" placeholder="Tu nombre" required maxlength="50"><label for="flavor-choice">Escoge tu sabor</label><select id="flavor-choice" name="flavor" required><option value="" disabled selected>Selecciona una opción</option><option>La Clásica</option><option>La Crocantita</option><option>La Consentida</option></select><button class="button button-dark form-button" type="submit">¡Quiero mis fresas! <span>♡</span></button><p class="form-hint">Formulario de demostración para el proyecto escolar 🍓</p><p class="form-message" id="form-message" role="status" aria-live="polite"></p></form></section>
+
+    <section class="closing"><span>🍓</span><p>Un antojito, una sonrisa.</p><h2>Así de <em>rico.</em></h2><span>♡</span></section>
+  </main>
+  <footer class="site-footer"><a class="brand" href="#inicio"><span class="brand-mark">♥</span> Fresas<span class="brand-light"> con crema</span><span class="brand-dot">.</span></a><p>Fresco, delicioso y hecho con cariño <span>♡</span></p><p>© <span id="year">2026</span> Fresas con Crema</p></footer>
+</body>
+</html>
