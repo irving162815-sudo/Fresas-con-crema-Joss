@@ -9,8 +9,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
+<script src="js/google-config.js" defer></script>
 <script src="js/site.js" defer></script>
 <script src="js/public-app.js" defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
 </head>
 <body data-page="register">
@@ -42,6 +44,9 @@
       <p class="form-hint">La lista de correos y las promociones son una demostración local; este sitio no envía correos.</p>
       <button class="button button-dark" type="submit">Crear mi cuenta <span>♡</span></button>
       <p class="form-message" id="register-message" role="status" aria-live="polite"></p>
+      <div class="auth-divider"><span>o regístrate con Google</span></div>
+      <div id="google-signin" class="google-signin"></div>
+      <p class="form-hint" id="google-message" role="status" aria-live="polite">Google Sign-In requiere configurar el identificador de cliente del proyecto.</p>
       <p class="auth-switch">¿Ya tienes cuenta? <a href="iniciar-sesion.html">Inicia sesión</a>.</p>
     </form>
   </section>

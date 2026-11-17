@@ -824,6 +824,9 @@ position:fixed;
 }
 .auth-switch { margin: 14px 0 0; color: #806d65; font-size: 11px; }
 .auth-switch a { color: var(--berry); font-weight: 700; }
+.auth-divider { display:flex; align-items:center; gap:10px; margin:17px 0 12px; color:#806d65; font-size:11px; }
+.auth-divider::before,.auth-divider::after { content:""; height:1px; flex:1; background:#ead8cf; }
+.google-signin { display:flex; justify-content:center; min-height:40px; }
 .campaign-note {
   max-width: 760px;
   margin: -12px 0 16px;

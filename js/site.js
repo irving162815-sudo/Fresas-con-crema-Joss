@@ -5,7 +5,7 @@ const publicPages = [
   ['about', 'sobre-nosotros.html', 'Sobre nosotros'],
   ['social', 'redes.html', 'Nuestras redes'],
   ['order', 'pedido.html', 'Pedidos'],
-  ['register', 'registro.html', 'Cliente fiel']
+  ['register', 'registro.html', 'Registrarse']
 ];
 
 function readSignedInCustomer() {
@@ -46,7 +46,7 @@ function makeFooter() {
   return `<footer class="site-footer">
     <a class="brand" href="index.html"><img src="assets/logo-jossys-berry.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
     <div class="footer-social"><p>Encuéntranos y escríbenos</p>
-      <a class="social-link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="ig-dot" cx="18" cy="6" r="1"/></svg> Instagram</a>
+      <a class="social-link" href="https://www.instagram.com/fresa_mania01?dmpr=ZWQxOHFnbTQ0Z3Rw" target="_blank" rel="noopener noreferrer" aria-label="Instagram Fresamania"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="ig-dot" cx="18" cy="6" r="1"/></svg> Fresamania</a>
       <a class="social-link" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer">WhatsApp 6434-7297</a>
       <a class="social-link" href="https://wa.me/50766260366" target="_blank" rel="noopener noreferrer">WhatsApp 6626-0366</a>
       <a class="footer-report-link" href="reportar.html">Reportar una falla</a>

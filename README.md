@@ -27,6 +27,7 @@ No hay un servidor Node independiente ni se instala nada con npm. La vista previ
 - `css/estilos.css`: diseño, colores, adaptación móvil y animaciones.
 - `js/site.js`: encabezado, pie y diseño compartido entre páginas; también muestra el nombre del usuario conectado y permite cerrar sesión.
 - `js/public-app.js`: pedidos, cuentas, consentimiento de promociones, reportes y respuestas del chatbot.
+- `js/google-config.js`: espacio para configurar el ID público de Google Sign-In.
 - `js/admin.js`: bandeja de pedidos, chats, fallas, clientes y campañas promocionales.
 
 ## Publicar en GitHub Pages
@@ -46,6 +47,10 @@ El chatbot responde con reglas y respuestas preparadas, usando el tono de Jossy�
 El encabezado tiene **Iniciar sesión**. Las cuentas incluyen nombre, correo, teléfono y contraseña de demostración; el encabezado muestra el nombre después de iniciar sesión. La casilla para recibir promociones es opcional y no viene marcada. En Admin se puede redactar una campaña, preparar un borrador en el programa de correo con las direcciones de clientes suscritos en copia oculta y exportar una lista CSV de quienes aceptaron recibir ofertas. La persona administradora debe revisar y enviar el correo manualmente.
 
 Como no hay servidor, las cuentas y los correos solo están en el navegador donde se registraron. El inicio de sesión no protege una cuenta real y el borrador por correo depende de que el equipo tenga una aplicación de correo configurada. Para cuentas compartidas y envíos automáticos haría falta un servicio seguro de cuentas y correo.
+
+El registro normal está en `registro.html` y el enlace **Registrarse** aparece en el menú. También se agregó el botón de Google en registro e inicio de sesión. Para mostrarlo, crea un ID de cliente de tipo aplicación web en Google Cloud Console, autoriza el dominio de GitHub Pages y coloca el ID en `js/google-config.js`. El acceso de Google de esta versión guarda el perfil en el navegador; para autenticar cuentas reales de manera segura y compartirlas entre dispositivos hace falta un servidor que verifique los tokens. La casilla de promociones sigue desmarcada por defecto, incluso con Google.
+
+Instagram: [Fresamania (@fresa_mania01)](https://www.instagram.com/fresa_mania01?dmpr=ZWQxOHFnbTQ0Z3Rw).
 
 ## Alcance de esta versión
 
