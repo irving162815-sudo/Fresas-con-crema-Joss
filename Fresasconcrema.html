@@ -4,76 +4,65 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8f2">
-  <meta name="description" content="Fresas con crema frescas, deliciosas y accesibles. Conoce nuestro emprendimiento y descubre el sabor de la dulzura natural.">
-  <title>Fresas con Crema | El sabor de la dulzura natural</title>
+  <meta name="description" content="Jossy’s Berry PTY: fresas con crema frescas, deliciosas y preparadas con cariño.">
+  <title>Jossy’s Berry PTY | Frescura y dulzura</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="Estilofresas.css">
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="css/estilos.css">
+  <script src="js/app.js" defer></script>
 </head>
 <body>
+  <section class="welcome-screen" id="welcome-screen" aria-labelledby="welcome-title">
+    <div class="welcome-card">
+      <img class="welcome-logo" src="Imagenes%20de%20la%20pagina/Logo/WhatsApp%20Image%202026-11-17%20at%203.17.36%20PM.jpeg" alt="Logo de Jossy’s Berry PTY">
+      <p class="eyebrow">FRESCURA Y DULZURA</p>
+      <h1 id="welcome-title">¡Bienvenido!</h1>
+      <p>Un antojito fresco te está esperando.</p>
+      <button class="button button-dark welcome-enter" id="welcome-enter" type="button">Entrar a la página <span>→</span></button>
+      <span class="welcome-decoration" aria-hidden="true">🍓</span>
+    </div>
+  </section>
+
   <header class="site-header">
-    <a class="brand" href="#inicio" aria-label="Fresas con Crema, inicio"><span class="brand-mark">♥</span> Fresas<span class="brand-light"> con crema</span><span class="brand-dot">.</span></a>
+    <a class="brand" href="#inicio" aria-label="Jossy’s Berry PTY, inicio"><img src="Imagenes%20de%20la%20pagina/Logo/WhatsApp%20Image%202026-11-17%20at%203.17.36%20PM.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
     <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-nav"><span></span><span></span><span></span></button>
     <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
-      <a href="#inicio">Inicio</a>
-      <div class="nav-dropdown">
-        <button class="dropdown-toggle" type="button" aria-expanded="false" aria-controls="section-menu">Explorar <span class="chevron">⌄</span></button>
-        <div class="dropdown-menu" id="section-menu">
-          <a href="#emprendimiento">Sobre el emprendimiento</a>
-          <a href="#menu">Nuestro menú</a>
-          <a href="#galeria">Galería</a>
-          <a href="#pedido">Pedidos</a>
-        </div>
-      </div>
-      <a class="nav-cta" href="#pedido">Hacer un pedido <span>↗</span></a>
+      <a href="#menu">Menú</a><a href="#sobre-nosotros">Sobre nosotros</a><a href="#redes">Nuestras redes</a>
+      <a class="nav-cta" href="#registro">Ser cliente fiel <span>♡</span></a>
+      <a class="admin-link" href="#admin">Admin</a>
     </nav>
   </header>
 
   <main>
     <section class="hero" id="inicio" aria-labelledby="hero-title">
-      <div class="hero-photo" role="img" aria-label="Tazón de fresas frescas con crema"></div>
-      <div class="hero-shade"></div>
-      <div class="hero-content">
-        <p class="hero-eyebrow"><span></span> FRESCO · DELICIOSO · HECHO CON CARIÑO</p>
-        <h1 id="hero-title">Fresas<br>con <em>crema</em></h1>
-        <p>El sabor de la dulzura natural.</p>
-        <a href="#menu" class="button button-light">Descubre nuestro menú <span>↓</span></a>
-      </div>
-      <a class="scroll-hint" href="#emprendimiento">CONOCE NUESTRO EMPRENDIMIENTO <span>↓</span></a>
-      <span class="hero-stamp" aria-hidden="true">FRESCO<br><b>♡</b><br>Y NATURAL</span>
+      <div class="hero-photo" role="img" aria-label="Fresas frescas con crema"></div><div class="hero-shade"></div>
+      <div class="hero-content"><p class="hero-eyebrow">FRESCURA Y DULZURA, EN CADA VASITO</p><h1 id="hero-title">Un antojo<br>que sabe a <em>felicidad.</em></h1><p>Fresas frescas y crema deliciosa, preparadas con cariño para ti.</p><a class="button button-light" href="#menu">Mira nuestro menú <span>↓</span></a></div>
+      <a class="scroll-hint" href="#sobre-nosotros">CONÓCENOS <span>↓</span></a><span class="hero-stamp">FRESCO<br><b>♡</b><br>Y NATURAL</span>
     </section>
 
-    <section class="ticker" aria-label="Lo mejor de nuestras fresas con crema"><div>FRUTAS FRESCAS <span>✳</span> SABOR ÚNICO <span>✳</span> BUEN SERVICIO <span>✳</span> MOMENTOS FELICES <span>✳</span> FRUTAS FRESCAS <span>✳</span> SABOR ÚNICO <span>✳</span></div></section>
+    <section class="ticker" aria-label="Lo mejor de Jossy’s Berry"><div>FRESAS FRESCAS <span>✳</span> HECHAS CON CARIÑO <span>✳</span> SABOR ÚNICO <span>✳</span> FRESAS FRESCAS <span>✳</span> HECHAS CON CARIÑO <span>✳</span></div></section>
 
-    <section class="business section-wrap" id="emprendimiento">
-      <div class="business-heading"><p class="eyebrow">CONOCE NUESTRA IDEA</p><h2>Un postre rico,<br><em>hecho para compartir.</em></h2><span class="business-heart">♡</span></div>
-      <div class="business-copy"><p class="eyebrow">NUESTRO EMPRENDIMIENTO</p><p class="business-description">Nuestro emprendimiento se dedica a la elaboración y venta de deliciosas fresas con crema, preparadas con frutas frescas y de alta calidad. Ofrecemos un producto con un sabor único, presentado de forma atractiva e ideal para cualquier ocasión. Nuestro objetivo es brindar a los clientes un postre fresco, delicioso y accesible, garantizando siempre higiene, buen servicio y una excelente experiencia en cada compra.</p><div class="values"><span>♡ Fruta fresca</span><span>♡ Higiene y calidad</span><span>♡ Buen servicio</span></div></div>
-    </section>
+    <section class="business section-wrap" id="sobre-nosotros"><div class="business-heading"><p class="eyebrow">SOMOS JOSSY’S BERRY PTY</p><h2>Pequeños gustos,<br><em>grandes sonrisas.</em></h2><span class="business-heart">♡</span></div><div class="business-copy"><p class="eyebrow">¿QUIÉNES SOMOS?</p><p class="business-description">Nuestro emprendimiento se dedica a la elaboración y venta de deliciosas fresas con crema, preparadas con frutas frescas y de alta calidad. Ofrecemos un producto con un sabor único, presentado de forma atractiva e ideal para cualquier ocasión. Nuestro objetivo es brindar a los clientes un postre fresco, delicioso y accesible, garantizando siempre higiene, buen servicio y una excelente experiencia en cada compra.</p><div class="values"><span>♡ Fruta fresca</span><span>♡ Higiene y calidad</span><span>♡ Buen servicio</span></div></div></section>
 
-    <section class="flavors section-wrap" id="menu">
-      <div class="section-heading"><div><p class="eyebrow">PREPARADAS PARA DISFRUTAR</p><h2>Nuestro <em>menú</em></h2></div><p class="section-intro">Fresas seleccionadas, crema deliciosa y una presentación hecha para antojarte.</p></div>
-      <div class="flavor-grid">
-        <article class="flavor-card card-pink"><div class="flavor-number">01</div><div class="mini-cup mini-classic"><span>🍓</span><b>♡</b></div><p class="card-tag">LA FAVORITA</p><h3>La Clásica</h3><p>Fresas frescas con nuestra crema dulce y suave.</p><div class="card-bottom"><span>Un clásico que nunca falla</span><span class="card-heart">♡</span></div></article>
-        <article class="flavor-card card-yellow"><div class="flavor-number">02</div><div class="mini-cup mini-crunch"><span>🍓</span><b>✦</b></div><p class="card-tag">UN TOQUE CRUJIENTE</p><h3>La Crocantita</h3><p>Fresas con crema y un toque crujiente irresistible.</p><div class="card-bottom"><span>Textura en cada cucharada</span><span class="card-heart">♡</span></div></article>
-        <article class="flavor-card card-green"><div class="flavor-number">03</div><div class="mini-cup mini-special"><span>🍓</span><b>✳</b></div><p class="card-tag">UN GUSTITO ESPECIAL</p><h3>La Consentida</h3><p>Nuestra combinación especial para darte un gusto extra.</p><div class="card-bottom"><span>Un poquito más de felicidad</span><span class="card-heart">♡</span></div></article>
-      </div>
-      <p class="menu-note">Los sabores y complementos pueden ajustarse a lo que tengamos disponible. <a href="#pedido">Consulta y haz tu pedido ↗</a></p>
-    </section>
+    <section class="menu-section section-wrap" id="menu"><div class="section-heading"><div><p class="eyebrow">PREPARADAS PARA DISFRUTAR</p><h2>Nuestro <em>menú</em></h2></div><p class="section-intro">Elige tu favorito. Cada vasito se prepara con ingredientes frescos.</p></div><div class="flavor-grid">
+      <article class="flavor-card card-pink"><div class="mini-cup"><span>🍓</span></div><p class="card-tag">LA FAVORITA</p><h3>La Clásica</h3><p>Fresas frescas con nuestra crema dulce y suave.</p><a class="card-action" href="#pedido" data-flavor="La Clásica">Pedir este sabor <span>↗</span></a></article>
+      <article class="flavor-card card-yellow"><div class="mini-cup"><span>🍓</span><b>✦</b></div><p class="card-tag">TOQUE CROCANTE</p><h3>La Crocantita</h3><p>Fresas con crema y un toque crujiente irresistible.</p><a class="card-action" href="#pedido" data-flavor="La Crocantita">Pedir este sabor <span>↗</span></a></article>
+      <article class="flavor-card card-green"><div class="mini-cup"><span>🍓</span><b>✳</b></div><p class="card-tag">UN GUSTITO ESPECIAL</p><h3>La Consentida</h3><p>Nuestra combinación especial para darte un gusto extra.</p><a class="card-action" href="#pedido" data-flavor="La Consentida">Pedir este sabor <span>↗</span></a></article>
+    </div><p class="menu-note">Los precios y complementos se confirman al coordinar el pedido.</p></section>
 
-    <section class="gallery section-wrap" id="galeria">
-      <div class="section-heading"><div><p class="eyebrow">UNA MIRADA DULCE</p><h2>Frescas y <em>deliciosas.</em></h2></div><p class="section-intro">Un vistazo a la dulzura y frescura que inspiran nuestro emprendimiento.</p></div>
-      <div class="gallery-grid">
-        <figure class="gallery-feature"><img src="Imagenes%20de%20la%20pagina/WhatsApp%20Image%202026-11-17%20at%202.42.20%20PM.jpeg" alt="Fresas con crema servidas en un tazón"><figcaption>Nuestro antojo favorito <span>♡</span></figcaption></figure>
-        <figure class="gallery-small"><img src="Imagenes%20de%20la%20pagina/Strawberry%20Cake%20GIF.gif" alt="Pastel decorado con fresas, inspiración dulce"><figcaption>Inspiración con fresas</figcaption></figure>
-      </div>
-    </section>
+    <section class="gallery section-wrap"><div class="section-heading"><div><p class="eyebrow">UNA MIRADA DULCE</p><h2>Frescas y <em>deliciosas.</em></h2></div></div><div class="gallery-grid"><figure class="gallery-feature"><img src="Imagenes%20de%20la%20pagina/WhatsApp%20Image%202026-11-17%20at%202.42.20%20PM.jpeg" alt="Fresas frescas con crema servidas en un tazón"><figcaption>El sabor de la dulzura natural ♡</figcaption></figure><figure class="gallery-small"><img src="Imagenes%20de%20la%20pagina/Strawberry%20Cake%20GIF.gif" alt="Pastel decorado con fresas como inspiración dulce"><figcaption>Inspiración con fresas</figcaption></figure></div></section>
 
-    <section class="order section-wrap" id="pedido"><div class="order-copy"><p class="eyebrow">TU ANTOJITO TE ESPERA</p><h2>¿Se te hizo<br>agua la <em>boca?</em></h2><p>Déjanos tu nombre y el sabor que prefieres. ¡Nos encantará preparar algo rico para ti!</p><div class="order-doodle">🍓 <span>♡</span></div></div><form class="order-form" id="order-form"><label for="customer-name">¿Cómo te llamas?</label><input id="customer-name" name="name" type="text" placeholder="Tu nombre" required maxlength="50"><label for="flavor-choice">Escoge tu sabor</label><select id="flavor-choice" name="flavor" required><option value="" disabled selected>Selecciona una opción</option><option>La Clásica</option><option>La Crocantita</option><option>La Consentida</option></select><button class="button button-dark form-button" type="submit">¡Quiero mis fresas! <span>♡</span></button><p class="form-hint">Formulario de demostración para el proyecto escolar 🍓</p><p class="form-message" id="form-message" role="status" aria-live="polite"></p></form></section>
+    <section class="loyalty section-wrap" id="registro"><div><p class="eyebrow">UN CLUB DULCE</p><h2>¡Forma parte de<br>nuestros <em>clientes fieles!</em></h2><p>Regístrate para que podamos saludarte por tu nombre en tu próximo antojo.</p></div><form class="loyalty-form" id="loyalty-form"><label for="loyalty-name">Tu nombre</label><input id="loyalty-name" name="name" autocomplete="name" required maxlength="60" placeholder="¿Cómo te llamas?"><label for="loyalty-phone">Tu WhatsApp</label><input id="loyalty-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de teléfono"><button class="button button-dark" type="submit">Quiero ser cliente fiel <span>♡</span></button><p class="form-message" id="loyalty-message" role="status" aria-live="polite"></p></form></section>
 
-    <section class="closing"><span>🍓</span><p>Un antojito, una sonrisa.</p><h2>Así de <em>rico.</em></h2><span>♡</span></section>
+    <section class="order section-wrap" id="pedido"><div class="order-copy"><p class="eyebrow">TU ANTOJITO TE ESPERA</p><h2>Haz tu <em>pedido.</em></h2><p>Cuéntanos qué sabor quieres y dónde te lo llevamos.</p><div class="order-doodle">🍓 <span>♡</span></div></div><form class="order-form" id="order-form"><label for="customer-name">Nombre</label><input id="customer-name" name="name" autocomplete="name" required maxlength="60" placeholder="Tu nombre"><label for="customer-phone">Teléfono</label><input id="customer-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de contacto"><label for="flavor-choice">Producto</label><select id="flavor-choice" name="flavor" required><option value="" disabled selected>Selecciona un sabor</option><option>La Clásica</option><option>La Crocantita</option><option>La Consentida</option></select><label for="delivery-address">Dirección de entrega</label><textarea id="delivery-address" name="address" autocomplete="street-address" required maxlength="250" placeholder="Calle, corregimiento, punto de referencia"></textarea><button class="location-button" type="button" id="location-button">◎ Compartir mi ubicación actual</button><p class="location-status" id="location-status" aria-live="polite">También puedes escribir la dirección.</p><div class="map-wrap" id="map-wrap" hidden><iframe id="location-map" title="Mapa de ubicación de entrega" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div><input type="hidden" id="latitude" name="latitude"><input type="hidden" id="longitude" name="longitude"><button class="button button-dark form-button" type="submit">Enviar pedido <span>♡</span></button><p class="form-hint">Demostración: los pedidos se guardan solo en este navegador.</p><p class="form-message" id="order-message" role="status" aria-live="polite"></p></form></section>
+
+    <section class="admin-section section-wrap" id="admin"><div class="section-heading"><div><p class="eyebrow">SOLO PARA EL EQUIPO</p><h2>Panel de <em>administración</em></h2></div><p class="section-intro">Inicia sesión para consultar los pedidos de demostración guardados en este navegador.</p></div><form class="admin-login" id="admin-login"><label for="admin-password">Clave de administrador</label><div class="login-row"><input id="admin-password" name="password" type="password" autocomplete="current-password" required placeholder="Ingresa la clave"><button class="button button-dark" type="submit">Ingresar</button></div><p class="form-message" id="admin-message" role="status" aria-live="polite"></p></form><div class="admin-dashboard" id="admin-dashboard" hidden><div class="dashboard-heading"><h3>Pedidos recibidos</h3><button class="button button-outline" id="admin-logout" type="button">Cerrar sesión</button></div><div id="orders-list" class="orders-list"></div></div></section>
   </main>
-  <footer class="site-footer"><a class="brand" href="#inicio"><span class="brand-mark">♥</span> Fresas<span class="brand-light"> con crema</span><span class="brand-dot">.</span></a><p>Fresco, delicioso y hecho con cariño <span>♡</span></p><p>© <span id="year">2026</span> Fresas con Crema</p></footer>
+
+  <footer class="site-footer" id="redes"><a class="brand" href="#inicio"><img src="Imagenes%20de%20la%20pagina/Logo/WhatsApp%20Image%202026-11-17%20at%203.17.36%20PM.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a><div class="footer-social"><p>Síguenos y escríbenos</p><a class="social-link instagram" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="ig-dot" cx="18" cy="6" r="1"/></svg><span>Instagram</span></a><a class="social-link whatsapp" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer">WhatsApp: 6434-7297</a><a class="social-link whatsapp" href="https://wa.me/50766260366" target="_blank" rel="noopener noreferrer">WhatsApp: 6626-0366</a></div><p class="copyright">© <span id="year">2026</span> Jossy’s Berry PTY · Frescura y dulzura</p><a class="admin-footer-link" href="#admin">Acceso del equipo</a></footer>
+
+  <button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Abrir asistente virtual">✦ <span>¿Te ayudo?</span></button>
+  <aside class="assistant-panel" id="assistant-panel" aria-label="Asistente virtual" hidden><div class="assistant-head"><div><span class="assistant-spark">✦</span><strong>Asistente Berry</strong><small>Estoy aquí para ayudarte 🍓</small></div><button type="button" id="assistant-close" aria-label="Cerrar asistente">×</button></div><div class="assistant-messages" id="assistant-messages" aria-live="polite"><p class="bot-message">¡Hola! Soy el asistente virtual de Jossy’s Berry. ¿Qué te gustaría saber?</p></div><div class="quick-questions"><button type="button" data-question="menu">Ver menú</button><button type="button" data-question="pedido">Hacer pedido</button><button type="button" data-question="contacto">Contacto</button></div><form id="assistant-form" class="assistant-form"><input id="assistant-input" autocomplete="off" aria-label="Escribe tu pregunta" placeholder="Escribe tu pregunta…"><button type="submit" aria-label="Enviar mensaje">➤</button></form></aside>
 </body>
 </html>
