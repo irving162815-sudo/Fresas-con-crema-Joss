@@ -30,7 +30,7 @@
       <p class="privacy-note">Recibir promociones es opcional. Marca la casilla solo si quieres que te enviemos novedades y ofertas.</p>
     </div>
     <form class="loyalty-form" id="register-form">
-      <!-- Los datos de registro se guardan localmente en este prototipo. -->
+      <!-- El servidor valida estos campos y guarda la cuenta en MongoDB Atlas. -->
       <label for="register-name">Nombre de usuario</label>
       <input id="register-name" name="name" autocomplete="name" required maxlength="60" placeholder="¿Cómo te llamas?">
       <label for="register-email">Correo electrónico</label>
@@ -41,7 +41,7 @@
       <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="100" placeholder="Al menos 8 caracteres">
       <label class="check-label"><input type="checkbox" name="promotions"> Sí, quiero recibir promociones y beneficios por correo.</label>
       <label class="check-label"><input type="checkbox" name="consent" required> Acepto que mis datos se guarden para administrar mi cuenta.</label>
-      <p class="form-hint">La lista de correos y las promociones son una demostración local; este sitio no envía correos.</p>
+      <p class="form-hint">Tu cuenta se guarda de forma segura en Atlas. Las promociones son opcionales y no se envían automáticamente.</p>
       <button class="button button-dark" type="submit">Crear mi cuenta <span>♡</span></button>
       <p class="form-message" id="register-message" role="status" aria-live="polite"></p>
       <p class="auth-switch">¿Ya tienes cuenta? <a href="iniciar-sesion.html">Inicia sesión</a>.</p>

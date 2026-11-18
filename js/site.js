@@ -1,4 +1,4 @@
-// Componentes comunes hechos con JavaScript para que las páginas funcionen sin servidor.
+// Componentes comunes que se muestran en las páginas del sitio.
 const publicPages = [
   ['home', 'index.html', 'Inicio'],
   ['menu', 'menu.html', 'Menú'],
@@ -11,9 +11,7 @@ const publicPages = [
 // Busca los datos del cliente que inició sesión para mostrar su nombre en el menú.
 function readSignedInCustomer() {
   try {
-    const email = localStorage.getItem('jossysBerrySignedIn');
-    const data = JSON.parse(localStorage.getItem('jossysBerryDemoData') || '{}');
-    return (data.customers || []).find((customer) => customer.email === email) || null;
+    return JSON.parse(sessionStorage.getItem('jossysBerryCustomer') || 'null');
   } catch { return null; }
 }
 
@@ -86,12 +84,26 @@ window.addEventListener('jossys-data-changed', () => {
 });
 
 function signOut() {
-  // Borra la sesión del navegador y refresca el nombre mostrado en el encabezado.
-  localStorage.removeItem('jossysBerrySignedIn');
-  window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+  // Pide al servidor cerrar la sesión y borra el nombre temporal de esta pestaña.
+  fetch('/api/customers/logout', { method: 'POST', credentials: 'same-origin' })
+    .catch(() => {})
+    .finally(() => {
+      sessionStorage.removeItem('jossysBerryCustomer');
+      window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+    });
 }
 
 document.querySelector('#sign-out')?.addEventListener('click', signOut);
+
+// Confirma con el servidor si esta pestaña tiene una sesión vigente de cliente.
+fetch('/api/session', { credentials: 'same-origin' })
+  .then((response) => response.ok ? response.json() : Promise.reject(new Error('Sesión no disponible')))
+  .then(({ customer }) => {
+    if (customer) sessionStorage.setItem('jossysBerryCustomer', JSON.stringify(customer));
+    else sessionStorage.removeItem('jossysBerryCustomer');
+    window.dispatchEvent(new CustomEvent('jossys-data-changed'));
+  })
+  .catch(() => {});
 
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
