@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Mira las promociones vigentes de Jossy’s Berry PTY.">
+<title>Promociones | Jossy’s Berry PTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/site.js" defer></script>
+<script src="js/public-app.js" defer></script>
+<link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
+</head>
+<body data-page="promotions">
+<div data-partial="header"></div>
+<main>
+<section class="page-banner">
+<p class="eyebrow">UN DETALLE DULCE PARA TI</p>
+<h1>Nuestras <em>promociones</em></h1>
+<p>Ofertas y novedades preparadas por el equipo de Jossy’s Berry PTY.</p>
+</section>
+<!-- Las promociones publicadas desde Admin aparecen aquí desde MongoDB Atlas. -->
+<section class="section-wrap">
+<div class="promotion-grid" id="public-promotions" aria-live="polite">
+<p class="promotion-empty">Cargando promociones…</p>
+</div>
+</section>
+</main>
+<div data-partial="footer"></div>
+<div data-partial="assistant"></div>
+</body>
+</html>

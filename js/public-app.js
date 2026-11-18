@@ -46,6 +46,23 @@ document.querySelectorAll('input[name="paymentMethod"]').forEach((choice) => cho
   help.textContent = instructions[choice.value] || 'El equipo confirmará el total antes de completar tu pedido.';
 }));
 
+// Enseña un total estimado; el servidor vuelve a calcularlo antes de guardarlo.
+function updateOrderTotal() {
+  const total = document.querySelector('#order-total');
+  if (!total) return;
+  const selectedProduct = document.querySelector('input[name="flavor"]:checked')?.value;
+  const productPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
+  if (!selectedProduct || !productPrices[selectedProduct]) {
+    total.textContent = 'Elige un producto para ver el total.';
+    return;
+  }
+  const toppingCount = document.querySelectorAll('input[name="toppings"]:checked').length;
+  const orderTotal = Number((productPrices[selectedProduct] + toppingCount * 0.5).toFixed(2));
+  total.textContent = `Total estimado: $${orderTotal.toFixed(2)} (${toppingCount} topping(s) × $0.50).`;
+}
+document.querySelectorAll('input[name="flavor"],input[name="toppings"]').forEach((choice) => choice.addEventListener('change', updateOrderTotal));
+updateOrderTotal();
+
 // Pide permiso GPS solo cuando la persona pulsa el botón para compartir su ubicación.
 document.querySelector('#location-button')?.addEventListener('click', () => {
   const status = document.querySelector('#location-status');
@@ -77,7 +94,9 @@ document.querySelector('#location-button')?.addEventListener('click', () => {
 document.querySelector('#order-form')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
-  const fields = Object.fromEntries(new FormData(form));
+  const formData = new FormData(form);
+  const fields = Object.fromEntries(formData);
+  fields.toppings = formData.getAll('toppings');
   const message = document.querySelector('#order-message');
   const submit = form.querySelector('[type="submit"]');
   submit.disabled = true;
@@ -89,6 +108,7 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
     showMessage(message, result.message);
     form.reset();
     document.querySelector('#payment-help').textContent = 'Selecciona un método de pago. El equipo confirmará el total antes de completar tu pedido.';
+    updateOrderTotal();
     document.querySelector('#delivery-address').required = true;
     document.querySelector('#delivery-address').placeholder = 'Calle, corregimiento y punto de referencia';
     document.querySelector('#map-wrap').hidden = true;
@@ -141,6 +161,50 @@ document.querySelector('#report-form')?.addEventListener('submit', async (event)
     form.reset();
   } catch (error) { showMessage(message, error.message, true); }
 });
+
+// Muestra las promociones que el equipo publicó desde el panel privado.
+async function loadPublicPromotions() {
+  const list = document.querySelector('#public-promotions');
+  if (!list) return;
+  try {
+    const { offers } = await apiRequest('/api/promotions');
+    list.replaceChildren();
+    if (!offers.length) {
+      const empty = document.createElement('p');
+      empty.className = 'promotion-empty';
+      empty.textContent = 'Pronto compartiremos nuevas promociones. ¡Vuelve a visitarnos!';
+      list.append(empty);
+      return;
+    }
+    offers.forEach((offer) => {
+      const card = document.createElement('article');
+      card.className = 'promotion-card';
+      if (offer.imageData) {
+        const image = document.createElement('img');
+        image.src = offer.imageData;
+        image.alt = `Imagen de la promoción ${offer.title}`;
+        image.loading = 'lazy';
+        card.append(image);
+      }
+      const content = document.createElement('div');
+      const title = document.createElement('h2');
+      title.textContent = offer.title;
+      const description = document.createElement('p');
+      description.textContent = offer.description;
+      content.append(title, description);
+      card.append(content);
+      list.append(card);
+    });
+  } catch {
+    list.replaceChildren();
+    const error = document.createElement('p');
+    error.className = 'promotion-empty';
+    error.textContent = 'No pudimos cargar las promociones. Intenta de nuevo más tarde.';
+    list.append(error);
+  }
+}
+
+loadPublicPromotions();
 
 // Crea o recupera una llave aleatoria para que el chat sobreviva al cambio de página.
 function getChatKey() {

@@ -42,10 +42,22 @@
 <!-- Cada opción visual selecciona el producto que se enviará al pedido. -->
 <fieldset class="product-picker">
 <legend>Elige tu producto</legend>
-<label class="product-option"><input type="radio" name="flavor" value="La Clásica" required><img src="assets/productos/clasica.jpeg" alt=""><span><b>La Clásica</b><small>Fresas frescas con crema dulce</small></span></label>
-<label class="product-option"><input type="radio" name="flavor" value="La Crocantita" required><img src="assets/productos/crocantita.jpeg" alt=""><span><b>La Crocantita</b><small>Con un toque crujiente</small></span></label>
-<label class="product-option"><input type="radio" name="flavor" value="La Consentida" required><img src="assets/productos/consentida.jpeg" alt=""><span><b>La Consentida</b><small>Nuestra combinación especial</small></span></label>
+<label class="product-option"><input type="radio" name="flavor" value="La Clásica" required><img src="assets/productos/clasica.jpeg" alt=""><span><b>La Clásica</b><small>Fresas frescas con crema dulce</small><strong>$2.99</strong></span></label>
+<label class="product-option"><input type="radio" name="flavor" value="La Crocantita" required><img src="assets/productos/crocantita.jpeg" alt=""><span><b>La Crocantita</b><small>Con un toque crujiente</small><strong>$3.99</strong></span></label>
+<label class="product-option"><input type="radio" name="flavor" value="La Consentida" required><img src="assets/productos/consentida.jpeg" alt=""><span><b>La Consentida</b><small>Nuestra combinación especial</small><strong>$4.99</strong></span></label>
 </fieldset>
+<p class="price-note">Precios en dólares (USD). Cada topping agrega $0.50 al total.</p>
+<!-- Cada topping suma cincuenta centavos al total que calcula el servidor. -->
+<fieldset class="topping-picker">
+<legend>Personaliza con toppings <small>(opcional)</small></legend>
+<label class="topping-option"><input type="checkbox" name="toppings" value="Extra de crema"><img src="assets/toppings/extra-crema.jpg" alt=""><span>Extra de crema <b>+$0.50</b></span></label>
+<label class="topping-option"><input type="checkbox" name="toppings" value="Chispitas de chocolate"><img src="assets/toppings/chispitas-chocolate.jpg" alt=""><span>Chispitas de chocolate <b>+$0.50</b></span></label>
+<label class="topping-option"><input type="checkbox" name="toppings" value="Chispitas de colores"><img src="assets/toppings/chispitas-colores.jpg" alt=""><span>Chispitas de colores <b>+$0.50</b></span></label>
+<label class="topping-option"><input type="checkbox" name="toppings" value="Galletas Oreo"><img src="assets/toppings/galletas-oreo.jpg" alt=""><span>Galletas Oreo <b>+$0.50</b></span></label>
+<label class="topping-option"><input type="checkbox" name="toppings" value="Extra de fresas"><img src="assets/toppings/extra-fresas.jpg" alt=""><span>Extra de fresas <b>+$0.50</b></span></label>
+</fieldset>
+<p class="order-total" id="order-total" aria-live="polite">Elige un producto para ver el total.</p>
+<p class="illustrative-note">Las imágenes de toppings son solamente ilustrativas.</p>
 <label for="delivery-address">Dirección escrita</label>
 <textarea id="delivery-address" name="address" autocomplete="street-address" required maxlength="250" placeholder="Calle, corregimiento y punto de referencia">
 </textarea>

@@ -2,7 +2,7 @@
 const loginForm = document.querySelector('#admin-login');
 const dashboard = document.querySelector('#admin-dashboard');
 const adminMessage = document.querySelector('#admin-message');
-let dashboardData = { orders: [], conversations: [], customers: [], reports: [], promotions: [] };
+let dashboardData = { orders: [], conversations: [], customers: [], reports: [], promotions: [], offers: [] };
 let loggedIn = false;
 
 // Llama a la API protegida y convierte errores del servidor en mensajes legibles.
@@ -34,6 +34,9 @@ function renderOrders(orders) {
     const details = makeElement('div');
     details.append(makeElement('h3', '', `${order.flavor} — ${order.name}`));
     details.append(makeElement('p', '', `Teléfono: ${order.phone}`));
+    details.append(makeElement('p', '', order.basePrice == null ? 'Precio base: No especificado' : `Precio base: $${Number(order.basePrice).toFixed(2)}`));
+    if (order.toppings?.length) details.append(makeElement('p', '', `Toppings: ${order.toppings.join(', ')} ($${Number(order.toppingUnitPrice ?? 0.5).toFixed(2)} cada uno)`));
+    details.append(makeElement('p', '', order.totalPrice == null ? 'Total: No especificado' : `Total del pedido: $${Number(order.totalPrice).toFixed(2)}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));
     details.append(makeElement('p', '', `Método de pago elegido: ${order.paymentMethod || 'No especificado'}`));
     details.append(makeElement('p', 'order-meta', `Recibido: ${new Date(order.createdAt).toLocaleString('es-PA')}`));
@@ -170,6 +173,34 @@ function renderPromotions(promotions) {
   });
 }
 
+// Dibuja las promociones públicas y permite retirarlas sin editar archivos del sitio.
+function renderOffers(offers) {
+  const list = document.querySelector('#offers-list');
+  if (!list) return;
+  list.replaceChildren();
+  if (!offers.length) { list.append(makeElement('p', 'empty-orders', 'Todavía no hay promociones publicadas.')); return; }
+  offers.forEach((offer) => {
+    const card = makeElement('article', 'offer-admin-card');
+    if (offer.imageData) {
+      const image = makeElement('img');
+      image.src = offer.imageData;
+      image.alt = `Imagen de ${offer.title}`;
+      card.append(image);
+    }
+    const details = makeElement('div');
+    details.append(makeElement('h3', '', offer.title), makeElement('p', '', offer.description));
+    details.append(makeElement('p', 'order-meta', `Publicada: ${new Date(offer.createdAt).toLocaleString('es-PA')}`));
+    const remove = makeElement('button', 'delete-order', 'Retirar promoción');
+    remove.type = 'button';
+    remove.addEventListener('click', async () => {
+      try { await adminApi(`/api/admin/offers/${offer._id}`, { method: 'DELETE' }); await refreshDashboard(true); }
+      catch (error) { setStatus(error.message, true); }
+    });
+    card.append(details, remove);
+    list.append(card);
+  });
+}
+
 // Actualiza los contadores superiores para que el equipo vea pendientes de un vistazo.
 function renderAdminSummary(data) {
   document.querySelector('#stat-orders').textContent = data.orders.length;
@@ -190,7 +221,7 @@ async function refreshDashboard(force = false) {
   dashboardData = await adminApi('/api/admin/dashboard');
   renderAdminSummary(dashboardData);
   renderOrders(dashboardData.orders); renderConversations(dashboardData.conversations);
-  renderCustomers(dashboardData.customers); renderReports(dashboardData.reports); renderPromotions(dashboardData.promotions);
+  renderCustomers(dashboardData.customers); renderReports(dashboardData.reports); renderPromotions(dashboardData.promotions); renderOffers(dashboardData.offers || []);
   setStatus('Datos sincronizados con MongoDB Atlas');
 }
 
@@ -213,6 +244,72 @@ document.querySelector('#admin-logout').addEventListener('click', async () => {
 
 // Los botones de actualizar vuelven a consultar el tablero en Atlas.
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true).catch((error) => setStatus(error.message, true))));
+
+// Reduce la imagen seleccionada en el navegador antes de enviarla a Atlas.
+async function compressOfferImage(file) {
+  if (!file || !file.name) return '';
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Elige una imagen JPG, PNG o WebP.');
+  if (file.size > 8 * 1024 * 1024) throw new Error('La imagen original debe pesar menos de 8 MB.');
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = sourceUrl;
+    await image.decode();
+    if (image.naturalWidth * image.naturalHeight > 24000000) throw new Error('La resolución de la imagen es demasiado grande.');
+    const scale = Math.min(1, 1000 / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(image.naturalWidth * scale);
+    canvas.height = Math.round(image.naturalHeight * scale);
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    let compressed = canvas.toDataURL('image/jpeg', 0.72);
+    if (compressed.length > 350000) compressed = canvas.toDataURL('image/jpeg', 0.5);
+    if (compressed.length > 350000) compressed = canvas.toDataURL('image/jpeg', 0.35);
+    if (compressed.length > 350000) throw new Error('No se pudo reducir la imagen lo suficiente. Prueba con otra más sencilla.');
+    return compressed;
+  } finally { URL.revokeObjectURL(sourceUrl); }
+}
+
+// Enseña una vista previa local de la imagen que se va a publicar.
+let offerPreviewUrl = '';
+document.querySelector('#offer-image')?.addEventListener('change', (event) => {
+  const file = event.currentTarget.files[0];
+  const preview = document.querySelector('#offer-image-preview');
+  const message = document.querySelector('#offer-message');
+  if (offerPreviewUrl) URL.revokeObjectURL(offerPreviewUrl);
+  offerPreviewUrl = '';
+  preview.hidden = !file;
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+    preview.hidden = true;
+    message.textContent = 'Elige una imagen JPG, PNG o WebP de menos de 8 MB.';
+    return;
+  }
+  offerPreviewUrl = URL.createObjectURL(file);
+  preview.src = offerPreviewUrl;
+  message.textContent = '';
+});
+
+// Publica el contenido y la imagen desde el panel, sin modificar código fuente.
+document.querySelector('#offer-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = document.querySelector('#offer-message');
+  const submit = form.querySelector('[type="submit"]');
+  submit.disabled = true;
+  try {
+    const fields = Object.fromEntries(new FormData(form));
+    const imageData = await compressOfferImage(fields.image);
+    const result = await adminApi('/api/admin/offers', { method: 'POST', body: JSON.stringify({ title: fields.title, description: fields.description, imageData }) });
+    message.textContent = `La promoción “${result.offer.title}” ya está publicada en la sección Promociones.`;
+    form.reset();
+    const preview = document.querySelector('#offer-image-preview');
+    preview.removeAttribute('src'); preview.hidden = true;
+    if (offerPreviewUrl) URL.revokeObjectURL(offerPreviewUrl);
+    offerPreviewUrl = '';
+    await refreshDashboard(true);
+  } catch (error) { message.textContent = error.message; }
+  finally { submit.disabled = false; }
+});
 
 // Guarda los borradores de promoción en Atlas sin enviar correos automáticamente.
 document.querySelector('#promotion-form')?.addEventListener('submit', async (event) => {

@@ -17,6 +17,9 @@ const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 const mongoUri = process.env.MONGO_URI;
 const sessionSecret = process.env.SESSION_SECRET;
 const adminPassword = process.env.ADMIN_PASSWORD;
+const productPrices = new Map([['La Clásica', 2.99], ['La Crocantita', 3.99], ['La Consentida', 4.99]]);
+const allowedToppings = ['Extra de crema', 'Chispitas de chocolate', 'Chispitas de colores', 'Galletas Oreo', 'Extra de fresas'];
+const toppingPrice = 0.50;
 
 // Modelo de clientes: las contraseñas se guardan como hash bcrypt, nunca como texto.
 const customerSchema = new mongoose.Schema({
@@ -34,6 +37,10 @@ const orderSchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: 60, trim: true },
   phone: { type: String, required: true, maxlength: 25, trim: true },
   flavor: { type: String, required: true, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
+  basePrice: { type: Number, required: true, min: 0 },
+  toppingUnitPrice: { type: Number, default: toppingPrice, min: 0 },
+  totalPrice: { type: Number, required: true, min: 0 },
+  toppings: { type: [{ type: String, enum: allowedToppings }], default: [] },
   paymentMethod: { type: String, enum: ['Efectivo', 'Yappy', 'Tarjeta Visa'], default: 'Efectivo' },
   address: { type: String, required: true, maxlength: 250, trim: true },
   latitude: { type: Number, min: -90, max: 90 },
@@ -80,6 +87,15 @@ const promotionSchema = new mongoose.Schema({
 });
 const Promotion = mongoose.model('Promotion', promotionSchema);
 
+// Promociones del sitio; las imágenes pequeñas se guardan en Atlas y no en el disco efímero de Render.
+const offerSchema = new mongoose.Schema({
+  title: { type: String, required: true, maxlength: 80, trim: true },
+  description: { type: String, required: true, maxlength: 600, trim: true },
+  imageData: { type: String, maxlength: 350000, default: '', select: false },
+  createdAt: { type: Date, default: Date.now }
+});
+const Offer = mongoose.model('Offer', offerSchema);
+
 // Ajusta la política del navegador para los estilos y el mapa que usa la página.
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
@@ -93,7 +109,13 @@ app.use(helmet({
 }));
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
-app.use(express.json({ limit: '20kb' }));
+// Mantiene pequeños los formularios normales; solo el administrador puede enviar una imagen comprimida.
+const smallJsonParser = express.json({ limit: '20kb' });
+const offerJsonParser = express.json({ limit: '400kb' });
+app.use((request, response, next) => {
+  const parser = request.method === 'POST' && request.path === '/api/admin/offers' ? offerJsonParser : smallJsonParser;
+  parser(request, response, next);
+});
 app.use((request, _response, next) => { if (!request.body) request.body = {}; next(); });
 
 // Conserva las sesiones del navegador en Atlas y marca la cookie como privada.
@@ -159,6 +181,12 @@ function brandReply(question) {
 // Confirma que la base siga conectada sin devolver nombres, pedidos ni credenciales.
 app.get('/api/health', (_request, response) => response.json({ status: 'connected', database: 'MongoDB Atlas' }));
 
+// Muestra únicamente las promociones publicadas, con campos seguros para el catálogo público.
+app.get('/api/promotions', async (_request, response) => {
+  const offers = await Offer.find().select('title description createdAt +imageData').sort({ createdAt: -1 }).limit(12).lean();
+  return response.json({ offers });
+});
+
 // Crea una cuenta y una sesión; el hash de contraseña nunca se devuelve al navegador.
 app.post('/api/customers/register', authLimiter, async (request, response) => {
   const name = text(request.body.name, 60);
@@ -214,24 +242,28 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
   const name = text(request.body.name, 60);
   const phone = text(request.body.phone, 25);
   const flavor = text(request.body.flavor, 40);
+  const toppings = Array.isArray(request.body.toppings) ? [...new Set(request.body.toppings.map((item) => text(item, 40)))] : [];
   const paymentMethod = text(request.body.paymentMethod, 30);
   const typedAddress = text(request.body.address, 250);
   const address = typedAddress || 'Ubicación GPS compartida';
   const latitude = request.body.latitude === '' || request.body.latitude == null ? undefined : Number(request.body.latitude);
   const longitude = request.body.longitude === '' || request.body.longitude == null ? undefined : Number(request.body.longitude);
-  if (!name || !phone || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(flavor) || !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
+  if (!name || !phone || !productPrices.has(flavor) || toppings.some((item) => !allowedToppings.includes(item)) || !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
     return response.status(400).json({ message: 'Completa tus datos, selecciona producto y método de pago, y acepta que usemos la información para atenderte.' });
   if ((latitude === undefined) !== (longitude === undefined) || (latitude !== undefined && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)))
     return response.status(400).json({ message: 'La ubicación GPS no es válida. Escribe tu dirección o vuelve a compartirla.' });
   if (!typedAddress && latitude === undefined) return response.status(400).json({ message: 'Escribe la dirección o comparte una ubicación GPS.' });
-  const order = await Order.create({ name, phone, flavor, paymentMethod, address, latitude, longitude,
+  const basePrice = productPrices.get(flavor);
+  const totalPrice = Number((basePrice + toppings.length * toppingPrice).toFixed(2));
+  const order = await Order.create({ name, phone, flavor, basePrice, toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
     customerId: request.session.customerId || undefined });
   const paymentInstructions = {
     Efectivo: 'Pagarás al recibir; el equipo confirmará el total y la entrega por WhatsApp.',
     Yappy: 'Espera la confirmación del total del equipo antes de enviar tu pago Yappy al 6434-7297.',
     'Tarjeta Visa': 'El equipo coordinará contigo una forma segura de completar el pago. No envíes datos de tarjeta por este formulario.'
   };
-  return response.status(201).json({ id: String(order._id), message: `Pedido registrado. ${paymentInstructions[paymentMethod]}` });
+  const extraNotice = toppings.length ? ` Incluye ${toppings.length} topping(s) a $${toppingPrice.toFixed(2)} cada uno.` : '';
+  return response.status(201).json({ id: String(order._id), totalPrice, message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${extraNotice} ${paymentInstructions[paymentMethod]}` });
 });
 
 // Recibe reportes públicos con límites de texto para reducir abuso y datos innecesarios.
@@ -294,14 +326,34 @@ app.post('/api/admin/logout', requireAdmin, (request, response) => {
 
 // Entrega al equipo solo los datos necesarios para atender pedidos y conversaciones.
 app.get('/api/admin/dashboard', requireAdmin, async (_request, response) => {
-  const [orders, conversations, customers, reports, promotions] = await Promise.all([
+  const [orders, conversations, customers, reports, promotions, offers] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).limit(500).lean(),
     Conversation.find().sort({ updatedAt: -1 }).limit(500).lean(),
     Customer.find().select('-passwordHash').sort({ createdAt: -1 }).limit(1000).lean(),
     Report.find().sort({ createdAt: -1 }).limit(500).lean(),
-    Promotion.find().sort({ createdAt: -1 }).limit(100).lean()
+    Promotion.find().sort({ createdAt: -1 }).limit(100).lean(),
+    Offer.find().select('title description createdAt').sort({ createdAt: -1 }).limit(100).lean()
   ]);
-  return response.json({ orders, conversations, customers, reports, promotions });
+  return response.json({ orders, conversations, customers, reports, promotions, offers });
+});
+
+// Publica una promoción desde Admin y limita imágenes a JPEG comprimido para cuidar Atlas.
+app.post('/api/admin/offers', requireAdmin, publicFormLimiter, async (request, response) => {
+  const title = text(request.body.title, 80);
+  const description = text(request.body.description, 600);
+  const imageData = typeof request.body.imageData === 'string' ? request.body.imageData : '';
+  if (!title || !description) return response.status(400).json({ message: 'Escribe el título y la descripción de la promoción.' });
+  if (imageData && (imageData.length > 350000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(imageData)))
+    return response.status(400).json({ message: 'La imagen debe ser JPEG y pesar menos de unos 250 KB después de comprimirla.' });
+  const offer = await Offer.create({ title, description, imageData });
+  return response.status(201).json({ offer: { id: String(offer._id), title: offer.title } });
+});
+
+// Permite retirar del sitio una promoción desde el panel protegido.
+app.delete('/api/admin/offers/:id', requireAdmin, async (request, response) => {
+  if (!validObjectId(request.params.id)) return response.status(400).json({ message: 'Identificador inválido.' });
+  await Offer.findByIdAndDelete(request.params.id);
+  return response.json({ ok: true });
 });
 
 // Permite responder en un chat persistente y que el cliente vea la respuesta al actualizar.
@@ -367,7 +419,7 @@ app.use('/api', (error, _request, response, _next) => {
 app.use('/assets', express.static(path.join(__dirname, 'assets'), { dotfiles: 'deny', index: false }));
 app.use('/css', express.static(path.join(__dirname, 'css'), { dotfiles: 'deny', index: false }));
 app.use('/js', express.static(path.join(__dirname, 'js'), { dotfiles: 'deny', index: false }));
-for (const file of ['index.html', 'menu.html', 'sobre-nosotros.html', 'redes.html', 'registro.html',
+for (const file of ['index.html', 'menu.html', 'promociones.html', 'sobre-nosotros.html', 'redes.html', 'registro.html',
   'iniciar-sesion.html', 'pedido.html', 'reportar.html', 'admin.html']) {
   app.get(file === 'index.html' ? ['/', '/index.html'] : `/${file}`, (_request, response) => {
     response.sendFile(path.join(__dirname, file));

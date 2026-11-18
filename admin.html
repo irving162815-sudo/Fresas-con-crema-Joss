@@ -97,6 +97,27 @@
 <div id="customers-list" class="customers-list">
 </div>
 </section>
+<section id="offers-section">
+<div class="section-heading">
+<div>
+<p class="eyebrow">CONTENIDO DE LA TIENDA</p>
+<h2>Promociones del sitio</h2>
+</div>
+</div>
+<p class="campaign-note">Crea una promoción que aparecerá en la nueva sección pública. Puedes cargar una imagen; el sistema la reduce y la guarda en MongoDB Atlas.</p>
+<form class="campaign-form" id="offer-form">
+<label for="offer-title">Título</label>
+<input id="offer-title" name="title" required maxlength="80" placeholder="Combo de temporada">
+<label for="offer-description">Descripción</label>
+<textarea id="offer-description" name="description" required maxlength="600" placeholder="Cuéntales a tus clientes qué incluye la promoción."></textarea>
+<label for="offer-image">Imagen promocional (opcional)</label>
+<input id="offer-image" name="image" type="file" accept="image/jpeg,image/png,image/webp">
+<img id="offer-image-preview" class="offer-image-preview" alt="Vista previa de la promoción" hidden>
+<button class="button button-dark" type="submit">Publicar promoción <span>→</span></button>
+<p class="form-message" id="offer-message" role="status" aria-live="polite"></p>
+</form>
+<div id="offers-list" class="offers-list"></div>
+</section>
 <section>
 <div class="section-heading">
 <div>

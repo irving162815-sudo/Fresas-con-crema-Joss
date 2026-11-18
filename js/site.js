@@ -2,6 +2,7 @@
 const publicPages = [
   ['home', 'index.html', 'Inicio'],
   ['menu', 'menu.html', 'Menú'],
+  ['promotions', 'promociones.html', 'Promociones'],
   ['about', 'sobre-nosotros.html', 'Sobre nosotros'],
   ['social', 'redes.html', 'Nuestras redes'],
   ['order', 'pedido.html', 'Pedidos'],
