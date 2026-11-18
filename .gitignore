@@ -4,8 +4,11 @@
 .env.*
 !.env.example
 
-# Dependencias instaladas localmente; se pueden recuperar con npm install.
+# Dependencias instaladas localmente; se recuperan con yarn install.
 node_modules/
+
+# Este proyecto usa Yarn; evita volver a mezclar el lockfile de npm.
+package-lock.json
 
 # No subir datos personales generados por la aplicación.
 data/*.json
@@ -13,3 +16,4 @@ data/*.tmp
 
 # Registros de errores de npm.
 npm-debug.log*
+yarn-error.log*

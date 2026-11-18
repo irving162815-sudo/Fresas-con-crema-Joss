@@ -5,8 +5,8 @@ services:
     runtime: node
     region: virginia
     plan: free
-    buildCommand: npm ci
-    startCommand: node server.js
+    buildCommand: yarn install --frozen-lockfile
+    startCommand: yarn start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
