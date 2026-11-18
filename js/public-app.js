@@ -224,6 +224,10 @@ function renderChat(conversation) {
   const messages = document.querySelector('#assistant-messages');
   if (!messages || !conversation) return;
   messages.replaceChildren();
+  const privacy = document.createElement('p');
+  privacy.className = 'assistant-privacy';
+  privacy.textContent = 'Chat con Google Gemini. Si falta un dato, tu consulta puede pasar al equipo.';
+  messages.append(privacy);
   conversation.messages.forEach((message) => {
     const bubble = document.createElement('p');
     bubble.className = message.role === 'customer' ? 'user-message' : message.role === 'human' ? 'human-message' : 'bot-message';
@@ -283,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!panel.hidden) {
       loadChat().catch(() => {});
       input.focus();
-      pollTimer = window.setInterval(() => loadChat().catch(() => {}), 2500);
+      pollTimer = window.setInterval(() => loadChat().catch(() => {}), 6000);
     } else window.clearInterval(pollTimer);
   });
   close?.addEventListener('click', () => { panel.hidden = true; window.clearInterval(pollTimer); });

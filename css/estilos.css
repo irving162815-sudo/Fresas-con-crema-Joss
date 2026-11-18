@@ -948,6 +948,13 @@ flex:1;
   flex-direction:column;
   gap:9px
 }
+.assistant-privacy {
+max-width:100%;
+margin:0;
+color:#806d65;
+font-size:9px;
+line-height:1.4
+}
 .bot-message,.user-message {
 max-width:88%;
   margin:0;
