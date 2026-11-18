@@ -39,13 +39,13 @@
 <input id="customer-name" name="name" autocomplete="name" required maxlength="60" placeholder="Tu nombre">
 <label for="customer-phone">Teléfono de contacto</label>
 <input id="customer-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de WhatsApp">
-<label for="flavor-choice">Producto</label>
-<select id="flavor-choice" name="flavor" required>
-<option value="" disabled selected>Selecciona un sabor</option>
-<option>La Clásica</option>
-<option>La Crocantita</option>
-<option>La Consentida</option>
-</select>
+<!-- Cada opción visual selecciona el producto que se enviará al pedido. -->
+<fieldset class="product-picker">
+<legend>Elige tu producto</legend>
+<label class="product-option"><input type="radio" name="flavor" value="La Clásica" required><img src="assets/productos/clasica.jpeg" alt=""><span><b>La Clásica</b><small>Fresas frescas con crema dulce</small></span></label>
+<label class="product-option"><input type="radio" name="flavor" value="La Crocantita" required><img src="assets/productos/crocantita.jpeg" alt=""><span><b>La Crocantita</b><small>Con un toque crujiente</small></span></label>
+<label class="product-option"><input type="radio" name="flavor" value="La Consentida" required><img src="assets/productos/consentida.jpeg" alt=""><span><b>La Consentida</b><small>Nuestra combinación especial</small></span></label>
+</fieldset>
 <label for="delivery-address">Dirección escrita</label>
 <textarea id="delivery-address" name="address" autocomplete="street-address" required maxlength="250" placeholder="Calle, corregimiento y punto de referencia">
 </textarea>
@@ -57,6 +57,14 @@
 </div>
 <input type="hidden" id="latitude" name="latitude">
 <input type="hidden" id="longitude" name="longitude">
+<!-- Solo registramos el método preferido; nunca pedimos datos bancarios en este sitio. -->
+<fieldset class="payment-picker">
+<legend>¿Cómo prefieres pagar?</legend>
+<label class="payment-option"><input type="radio" name="paymentMethod" value="Efectivo" required><span><b>Efectivo</b><small>Paga al recibir; confirmaremos el total contigo.</small></span></label>
+<label class="payment-option"><input type="radio" name="paymentMethod" value="Yappy" required><span><b>Yappy</b><small>Al confirmar tu pedido, podrás pagar al 6434-7297.</small></span></label>
+<label class="payment-option"><input type="radio" name="paymentMethod" value="Tarjeta Visa" required><span><b>Tarjeta Visa</b><small>El equipo coordinará el pago de forma segura. No ingreses datos de tarjeta aquí.</small></span></label>
+</fieldset>
+<p class="payment-help" id="payment-help" aria-live="polite">Selecciona un método de pago. El equipo confirmará el total antes de completar el pedido.</p>
 <label class="check-label">
 <input type="checkbox" name="consent" required> Acepto compartir estos datos con Jossy’s Berry para atender mi pedido.</label>
 <button class="button button-dark form-button" type="submit">Enviar pedido <span>♡</span>

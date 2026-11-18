@@ -35,6 +35,7 @@ function renderOrders(orders) {
     details.append(makeElement('h3', '', `${order.flavor} — ${order.name}`));
     details.append(makeElement('p', '', `Teléfono: ${order.phone}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));
+    details.append(makeElement('p', '', `Método de pago elegido: ${order.paymentMethod || 'No especificado'}`));
     details.append(makeElement('p', 'order-meta', `Recibido: ${new Date(order.createdAt).toLocaleString('es-PA')}`));
     if (Number.isFinite(order.latitude) && Number.isFinite(order.longitude)) {
       const map = makeElement('a', '', 'Ver ubicación en el mapa ↗');

@@ -34,6 +34,7 @@ const orderSchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: 60, trim: true },
   phone: { type: String, required: true, maxlength: 25, trim: true },
   flavor: { type: String, required: true, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
+  paymentMethod: { type: String, enum: ['Efectivo', 'Yappy', 'Tarjeta Visa'], default: 'Efectivo' },
   address: { type: String, required: true, maxlength: 250, trim: true },
   latitude: { type: Number, min: -90, max: 90 },
   longitude: { type: Number, min: -180, max: 180 },
@@ -213,18 +214,24 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
   const name = text(request.body.name, 60);
   const phone = text(request.body.phone, 25);
   const flavor = text(request.body.flavor, 40);
+  const paymentMethod = text(request.body.paymentMethod, 30);
   const typedAddress = text(request.body.address, 250);
   const address = typedAddress || 'Ubicación GPS compartida';
   const latitude = request.body.latitude === '' || request.body.latitude == null ? undefined : Number(request.body.latitude);
   const longitude = request.body.longitude === '' || request.body.longitude == null ? undefined : Number(request.body.longitude);
-  if (!name || !phone || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(flavor) || request.body.consent !== true)
-    return response.status(400).json({ message: 'Completa los datos del pedido y acepta que usemos la información para atenderlo.' });
+  if (!name || !phone || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(flavor) || !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
+    return response.status(400).json({ message: 'Completa tus datos, selecciona producto y método de pago, y acepta que usemos la información para atenderte.' });
   if ((latitude === undefined) !== (longitude === undefined) || (latitude !== undefined && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)))
     return response.status(400).json({ message: 'La ubicación GPS no es válida. Escribe tu dirección o vuelve a compartirla.' });
   if (!typedAddress && latitude === undefined) return response.status(400).json({ message: 'Escribe la dirección o comparte una ubicación GPS.' });
-  const order = await Order.create({ name, phone, flavor, address, latitude, longitude,
+  const order = await Order.create({ name, phone, flavor, paymentMethod, address, latitude, longitude,
     customerId: request.session.customerId || undefined });
-  return response.status(201).json({ id: String(order._id), message: 'Tu pedido quedó registrado. El equipo te contactará para coordinar la entrega.' });
+  const paymentInstructions = {
+    Efectivo: 'Pagarás al recibir; el equipo confirmará el total y la entrega por WhatsApp.',
+    Yappy: 'Espera la confirmación del total del equipo antes de enviar tu pago Yappy al 6434-7297.',
+    'Tarjeta Visa': 'El equipo coordinará contigo una forma segura de completar el pago. No envíes datos de tarjeta por este formulario.'
+  };
+  return response.status(201).json({ id: String(order._id), message: `Pedido registrado. ${paymentInstructions[paymentMethod]}` });
 });
 
 // Recibe reportes públicos con límites de texto para reducir abuso y datos innecesarios.

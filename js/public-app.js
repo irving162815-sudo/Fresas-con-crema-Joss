@@ -29,7 +29,22 @@ function cacheCustomer(customer) {
 // Si el cliente llega desde el menú, deja seleccionado el sabor que escogió.
 const productCode = new URLSearchParams(window.location.search).get('producto');
 const productName = { clasica: 'La Clásica', crocantita: 'La Crocantita', consentida: 'La Consentida' }[productCode];
-if (productName && document.querySelector('#flavor-choice')) document.querySelector('#flavor-choice').value = productName;
+if (productName) {
+  const productChoice = document.querySelector(`input[name="flavor"][value="${productName}"]`);
+  if (productChoice) productChoice.checked = true;
+}
+
+// Explica los siguientes pasos según el método de pago elegido por el cliente.
+document.querySelectorAll('input[name="paymentMethod"]').forEach((choice) => choice.addEventListener('change', () => {
+  const help = document.querySelector('#payment-help');
+  if (!help) return;
+  const instructions = {
+    Efectivo: 'Pagarás al recibir. El equipo confirmará el total y la entrega por WhatsApp.',
+    Yappy: 'Cuando el equipo confirme el total, podrás enviar el pago por Yappy al 6434-7297.',
+    'Tarjeta Visa': 'Registraremos tu preferencia y el equipo coordinará un pago seguro. Nunca escribas los datos de tu tarjeta aquí.'
+  };
+  help.textContent = instructions[choice.value] || 'El equipo confirmará el total antes de completar tu pedido.';
+}));
 
 // Pide permiso GPS solo cuando la persona pulsa el botón para compartir su ubicación.
 document.querySelector('#location-button')?.addEventListener('click', () => {
@@ -64,18 +79,23 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
   const form = event.currentTarget;
   const fields = Object.fromEntries(new FormData(form));
   const message = document.querySelector('#order-message');
+  const submit = form.querySelector('[type="submit"]');
+  submit.disabled = true;
+  submit.setAttribute('aria-busy', 'true');
   try {
     const result = await apiRequest('/api/orders', { method: 'POST', body: JSON.stringify({
       ...fields, consent: fields.consent === 'on'
     }) });
     showMessage(message, result.message);
     form.reset();
+    document.querySelector('#payment-help').textContent = 'Selecciona un método de pago. El equipo confirmará el total antes de completar tu pedido.';
     document.querySelector('#delivery-address').required = true;
     document.querySelector('#delivery-address').placeholder = 'Calle, corregimiento y punto de referencia';
     document.querySelector('#map-wrap').hidden = true;
     document.querySelector('#location-map').removeAttribute('src');
     document.querySelector('#location-status').textContent = 'También puedes escribir tu dirección arriba.';
   } catch (error) { showMessage(message, error.message, true); }
+  finally { submit.disabled = false; submit.removeAttribute('aria-busy'); }
 });
 
 // Registra la cuenta en Atlas; el servidor cifra la contraseña y abre la sesión segura.
