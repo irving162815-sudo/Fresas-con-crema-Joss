@@ -1,6 +1,7 @@
 /* Jossy's Berry PTY — estilos comunes y componentes reutilizables. */
 /* Cada regla CSS conecta un selector con el aspecto de uno o varios elementos HTML. */
 /* Paleta principal y tipos de letra que se reutilizan en todo el sitio. */
+/* Reglas base: normalizan márgenes y mantienen los controles accesibles al teclado. */
 :root {
 --ink:#34221e;
   --berry:#a52c51;
@@ -237,6 +238,7 @@ min-width:max-content;
 padding:0 24px;
   color:var(--yellow)
 }
+/* Mueve el mensaje horizontal decorativo sin JavaScript. */
 @keyframes marquee {
 to {
 transform:translateX(-35%)
@@ -333,6 +335,7 @@ background:#f7e7c7
 .card-green {
 background:#e4e8d9
 }
+/* Imágenes y precios visibles en las tarjetas del menú de sabores. */
 .flavor-photo {
 display:block;
 width:100%;
@@ -813,7 +816,7 @@ position:fixed;
   .footer-report-link { justify-self: start; }
 }
 
-/* Account controls in the shared header. */
+/* Botones de cuenta que alternan entre Iniciar sesión y el saludo del cliente. */
 #account-area {
   display: inline-flex;
   align-items: center;
@@ -846,6 +849,7 @@ position:fixed;
 }
 .auth-switch { margin: 14px 0 0; color: #806d65; font-size: 11px; }
 .auth-switch a { color: var(--berry); font-weight: 700; }
+/* Formulario de campañas por correo y lista de promociones guardadas en Admin. */
 .campaign-note {
   max-width: 760px;
   margin: -12px 0 16px;
@@ -877,12 +881,14 @@ position:fixed;
 .campaign-form textarea { min-height: 105px; resize: vertical; }
 .campaign-form .button { align-self: flex-start; }
 .promotions-list { display: grid; gap: 10px; margin-top: 15px; }
+/* Ajustes móviles para el área de cuenta y el formulario de campañas. */
 @media(max-width:650px) {
   #account-area { align-items: stretch; flex-direction: column; }
   .login-link,.sign-out-button { justify-content: center; }
   .signed-in-name { max-width: 100%; }
   .campaign-form { padding: 18px; }
 }
+/* Componentes del chatbot flotante: ventana, burbujas y preguntas rápidas. */
 .assistant-launcher:hover {
 background:#dbaf05;
   color:var(--ink);
@@ -1011,6 +1017,7 @@ width:40px;
   color:white;
   cursor:pointer
 }
+/* Portada de bienvenida y animaciones que la muestran al entrar al sitio. */
 .welcome-screen {
 position:fixed;
   inset:0;
@@ -1118,6 +1125,7 @@ opacity:1;
 }
 
 }
+/* En tabletas se reducen espacios y se reorganiza la navegación. */
 @media(max-width:860px) {
 .site-header {
 padding:0 5%
@@ -1137,6 +1145,7 @@ gap:5%
 }
 
 }
+/* En teléfonos la navegación se pliega y las columnas se apilan. */
 @media(max-width:650px) {
 html {
 scroll-padding-top:70px
@@ -1292,6 +1301,7 @@ font-size:35px
 }
 
 }
+/* Respeta la preferencia del sistema para reducir movimiento y transiciones. */
 @media(prefers-reduced-motion:reduce) {
 *,*::before,*::after {
 scroll-behavior:auto!important;
@@ -1301,7 +1311,7 @@ scroll-behavior:auto!important;
 }
 
 }
-/* Diseños compartidos por las distintas páginas del sitio. */
+/* Reglas compartidas por las páginas internas; afinan la base declarada arriba. */
 [hidden] {
 display:none!important
 }
@@ -1802,6 +1812,7 @@ border-radius:8px
 opacity:.65;
 cursor:wait
 }
+/* Apariencia y distribución del acceso y las listas del panel privado. */
 .admin-page {
 background:#fffaf6
 }
@@ -2072,6 +2083,7 @@ z-index:40
 .site-header {
 z-index:30
 }
+/* Reglas globales de adaptación para tablets. */
 @media(max-width:860px) {
 .social-cards {
 grid-template-columns:1fr 1fr
@@ -2085,6 +2097,7 @@ gap:6%
 }
 
 }
+/* Reglas globales de adaptación para teléfonos. */
 @media(max-width:650px) {
 .home-intro,.about-grid,.form-page,.order-page {
 grid-template-columns:1fr;

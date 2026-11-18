@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="es">
 <head>
+<!-- Metadatos para el navegador, título de la pestaña y recursos compartidos del sitio. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Jossy’s Berry PTY: fresas con crema frescas, deliciosas y preparadas con cariño.">
 <title>Jossy’s Berry PTY | Frescura y dulzura</title>
+<!-- Prepara las fuentes, estilos, scripts comunes y el icono de la pestaña. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
@@ -15,8 +17,10 @@
 </script>
 <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon.png">
 </head>
+<!-- data-page permite que js/site.js marque Inicio en la navegación. -->
 <body data-page="home">
   <!-- El encabezado y pie comunes se reutilizan en cada página pública. -->
+  <!-- El encabezado compartido se construye en js/site.js. -->
   <div data-partial="header">
 </div>
   <!-- Esta bienvenida es la primera vista; el botón abre el inicio del sitio. -->
@@ -83,8 +87,10 @@
 </a>
 </section>
   </main>
-  <div data-partial="footer">
+  <!-- El JavaScript agrega aquí el pie común con redes y contacto. -->
+<div data-partial="footer">
 </div>
+<!-- El chatbot y el acceso del equipo se agregan desde js/site.js. -->
 <div data-partial="assistant">
 </div>
 </body>

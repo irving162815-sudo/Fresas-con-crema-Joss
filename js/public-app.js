@@ -1,4 +1,5 @@
 // Formularios públicos: envían los datos al servidor para guardarlos en MongoDB Atlas.
+// Guarda en el navegador la llave aleatoria que identifica la conversación del chat.
 const CHAT_ID_KEY = 'jossysBerryChatId';
 
 // Envía JSON al servidor y enseña mensajes claros si la API responde con un error.
@@ -252,7 +253,7 @@ async function loadChat() {
   renderChat(result.conversation);
 }
 
-// Envía una pregunta a Atlas; el servidor guarda el mensaje y genera la respuesta del bot.
+// Envía la pregunta al servidor; este la guarda y consulta Gemini o deriva al equipo.
 async function sendChatMessage(text) {
   const message = text.trim();
   if (!message) return;

@@ -19,6 +19,7 @@ const sessionSecret = process.env.SESSION_SECRET;
 const adminPassword = process.env.ADMIN_PASSWORD;
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+// Catálogo del servidor: los precios se calculan aquí para que el navegador no pueda cambiarlos.
 const productPrices = new Map([['La Clásica', 2.99], ['La Crocantita', 3.99], ['La Consentida', 4.99]]);
 const allowedToppings = ['Extra de crema', 'Chispitas de chocolate', 'Chispitas de colores', 'Galletas Oreo', 'Extra de fresas'];
 const toppingPrice = 0.50;

@@ -1,4 +1,5 @@
-// Componentes comunes que se muestran en las páginas del sitio.
+// Este archivo reúne los componentes compartidos por las páginas públicas del sitio.
+// El mapa relaciona cada identificador de página con su archivo y su nombre de navegación.
 const publicPages = [
   ['home', 'index.html', 'Inicio'],
   ['menu', 'menu.html', 'Menú'],
@@ -84,6 +85,7 @@ window.addEventListener('jossys-data-changed', () => {
   document.querySelector('#sign-out')?.addEventListener('click', signOut);
 });
 
+// Cierra la sesión en el servidor y refresca el nombre que muestra el encabezado.
 function signOut() {
   // Pide al servidor cerrar la sesión y borra el nombre temporal de esta pestaña.
   fetch('/api/customers/logout', { method: 'POST', credentials: 'same-origin' })
@@ -106,6 +108,7 @@ fetch('/api/session', { credentials: 'same-origin' })
   })
   .catch(() => {});
 
+// Referencias al botón móvil y al panel de navegación que abre o cierra.
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
 // Abre y cierra el menú desplegable en pantallas pequeñas.
