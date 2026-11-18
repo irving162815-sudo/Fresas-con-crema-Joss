@@ -2,6 +2,9 @@
   "name": "jossys-berry-pty",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "description": "Sitio de Jossy's Berry PTY con servidor local y conexión protegida a MongoDB Atlas.",
   "main": "server.js",
   "scripts": {
