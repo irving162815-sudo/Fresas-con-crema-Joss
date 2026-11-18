@@ -258,7 +258,8 @@ app.post('/api/chats/:key/messages', publicFormLimiter, async (request, response
     : brandReply(message);
   conversation.messages.push({ role: 'assistant', text: answer.reply });
   conversation.handoff = conversation.handoff || answer.handoff;
-  if (conversation.handoff) conversation.status = conversation.status === 'answered' ? 'answered' : 'waiting';
+  // Un nuevo mensaje del cliente vuelve a poner el chat en espera, aunque ya se hubiera respondido antes.
+  if (conversation.handoff) conversation.status = 'waiting';
   conversation.updatedAt = new Date();
   await conversation.save();
   return response.json({ conversation });

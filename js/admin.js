@@ -169,6 +169,14 @@ function renderPromotions(promotions) {
   });
 }
 
+// Actualiza los contadores superiores para que el equipo vea pendientes de un vistazo.
+function renderAdminSummary(data) {
+  document.querySelector('#stat-orders').textContent = data.orders.length;
+  document.querySelector('#stat-chats').textContent = data.conversations.filter((chat) => chat.handoff && chat.status !== 'closed' && chat.status !== 'answered').length;
+  document.querySelector('#stat-reports').textContent = data.reports.filter((report) => !report.resolved).length;
+  document.querySelector('#stat-customers').textContent = data.customers.length;
+}
+
 // Muestra un aviso general en la barra del panel.
 function setStatus(message, isError = false) {
   const status = document.querySelector('#admin-status');
@@ -179,6 +187,7 @@ function setStatus(message, isError = false) {
 async function refreshDashboard(force = false) {
   if (!loggedIn || (!force && document.activeElement?.closest('.conversation-reply'))) return;
   dashboardData = await adminApi('/api/admin/dashboard');
+  renderAdminSummary(dashboardData);
   renderOrders(dashboardData.orders); renderConversations(dashboardData.conversations);
   renderCustomers(dashboardData.customers); renderReports(dashboardData.reports); renderPromotions(dashboardData.promotions);
   setStatus('Datos sincronizados con MongoDB Atlas');

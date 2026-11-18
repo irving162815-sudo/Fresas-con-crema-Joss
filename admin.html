@@ -47,7 +47,14 @@
 <p id="admin-status">Panel conectado a MongoDB Atlas</p>
 <button class="button button-outline" id="admin-logout" type="button">Cerrar sesión</button>
 </div>
-<section>
+<!-- Resumen rápido: cada tarjeta lleva a la lista que necesita atención. -->
+<section class="admin-overview" aria-label="Resumen del negocio">
+<a class="admin-stat" href="#orders-section"><span>Pedidos registrados</span><strong id="stat-orders">0</strong></a>
+<a class="admin-stat" href="#conversations-section"><span>Chats por atender</span><strong id="stat-chats">0</strong></a>
+<a class="admin-stat" href="#reports-section"><span>Reportes pendientes</span><strong id="stat-reports">0</strong></a>
+<a class="admin-stat" href="#customers-section"><span>Clientes fieles</span><strong id="stat-customers">0</strong></a>
+</section>
+<section id="orders-section">
 <div class="section-heading">
 <div>
 <p class="eyebrow">VENTAS</p>
@@ -58,7 +65,7 @@
 <div id="orders-list" class="orders-list">
 </div>
 </section>
-<section>
+<section id="conversations-section">
 <div class="section-heading">
 <div>
 <p class="eyebrow">ATENCIÓN AL CLIENTE</p>
@@ -69,7 +76,7 @@
 <div id="conversations-list" class="conversations-list">
 </div>
 </section>
-<section>
+<section id="reports-section">
 <div class="section-heading">
 <div>
 <p class="eyebrow">SOPORTE DEL SITIO</p>
@@ -80,7 +87,7 @@
 <div id="reports-list" class="reports-list">
 </div>
 </section>
-<section>
+<section id="customers-section">
 <div class="section-heading">
 <div>
 <p class="eyebrow">COMUNIDAD</p>
