@@ -167,6 +167,49 @@ document.querySelectorAll('input[name="paymentMethod"]').forEach((choice) => cho
 }));
 
 // Enseña un total estimado; el servidor vuelve a calcularlo antes de guardarlo.
+let selectedOffer = null;
+
+// Aplica la oferta al producto y evita que se combine con un sabor distinto.
+function setSelectedOffer(offer) {
+  selectedOffer = offer;
+  const offerId = document.querySelector('#order-offer-id');
+  const panel = document.querySelector('#selected-offer');
+  const note = document.querySelector('#selected-offer-message');
+  if (offerId) offerId.value = offer?.id || '';
+  if (panel) panel.hidden = !offer;
+  if (note && offer) {
+    const regularPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
+    note.textContent = `${offer.title}: ${offer.product} por $${Number(offer.price).toFixed(2)} (regular $${regularPrices[offer.product].toFixed(2)}). Los toppings se cobran aparte.`;
+  }
+  document.querySelectorAll('input[name="flavor"]').forEach((radio) => {
+    radio.disabled = Boolean(offer && radio.value !== offer.product);
+    if (offer && radio.value === offer.product) radio.checked = true;
+  });
+  updateOrderTotal();
+}
+
+// Quita la oferta y vuelve a habilitar los tres productos.
+function clearSelectedOffer() {
+  setSelectedOffer(null);
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('oferta')) {
+    url.searchParams.delete('oferta');
+    window.history.replaceState({}, '', url);
+  }
+}
+
+// Busca la oferta escogida en la página pública y la muestra antes de confirmar el pedido.
+async function loadSelectedOffer() {
+  const offerId = new URLSearchParams(window.location.search).get('oferta');
+  if (!offerId) return;
+  if (!/^[a-f0-9]{24}$/i.test(offerId)) throw new Error('El enlace de la oferta no es válido. Elige otra desde Promociones.');
+  const { offer } = await apiRequest(`/api/promotions/${encodeURIComponent(offerId)}`);
+  if (!offer || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(offer.product) || !Number.isFinite(offer.price))
+    throw new Error('Esta oferta ya no está disponible. Revisa las promociones vigentes.');
+  setSelectedOffer(offer);
+  document.querySelector('#selected-offer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function updateOrderTotal() {
   const total = document.querySelector('#order-total');
   if (!total) return;
@@ -177,11 +220,17 @@ function updateOrderTotal() {
     return;
   }
   const toppingCount = document.querySelectorAll('input[name="toppings"]:checked').length;
-  const orderTotal = Number((productPrices[selectedProduct] + toppingCount * 0.5).toFixed(2));
-  total.textContent = `Total estimado: $${orderTotal.toFixed(2)} (${toppingCount} topping(s) × $0.50).`;
+  const regularPrice = productPrices[selectedProduct];
+  const basePrice = selectedOffer?.product === selectedProduct ? Number(selectedOffer.price) : regularPrice;
+  const orderTotal = Number((basePrice + toppingCount * 0.5).toFixed(2));
+  total.textContent = selectedOffer?.product === selectedProduct
+    ? `Oferta aplicada: producto $${basePrice.toFixed(2)} (antes $${regularPrice.toFixed(2)}). Total estimado: $${orderTotal.toFixed(2)} con ${toppingCount} topping(s).`
+    : `Total estimado: $${orderTotal.toFixed(2)} (${toppingCount} topping(s) × $0.50).`;
 }
 document.querySelectorAll('input[name="flavor"],input[name="toppings"]').forEach((choice) => choice.addEventListener('change', updateOrderTotal));
 updateOrderTotal();
+document.querySelector('#remove-selected-offer')?.addEventListener('click', clearSelectedOffer);
+loadSelectedOffer().catch((error) => showMessage(document.querySelector('#order-message'), error.message, true));
 
 // Pide permiso GPS solo cuando la persona pulsa el botón para compartir su ubicación.
 document.querySelector('#location-button')?.addEventListener('click', () => {
@@ -231,6 +280,7 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
     await refreshOrderTracking();
     document.querySelector('#order-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     form.reset();
+    clearSelectedOffer();
     document.querySelector('#payment-help').textContent = 'Selecciona un método de pago. El equipo confirmará el total antes de completar tu pedido.';
     updateOrderTotal();
     document.querySelector('#delivery-address').required = true;
@@ -324,6 +374,19 @@ async function loadPublicPromotions() {
       const description = document.createElement('p');
       description.textContent = offer.description;
       content.append(title, description);
+      if (offer.product && Number.isFinite(offer.price) && offer.id) {
+        const regularPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
+        const product = document.createElement('p');
+        product.textContent = `Incluye ${offer.product}`;
+        const price = document.createElement('p');
+        price.className = 'promotion-price';
+        price.textContent = `Precio de oferta: $${Number(offer.price).toFixed(2)}${regularPrices[offer.product] ? ` · Regular $${regularPrices[offer.product].toFixed(2)}` : ''}`;
+        const redeem = document.createElement('a');
+        redeem.className = 'button button-dark promotion-redeem';
+        redeem.href = `pedido.html?oferta=${encodeURIComponent(offer.id)}`;
+        redeem.textContent = 'Canjear oferta';
+        content.append(product, price, redeem);
+      }
       card.append(content);
       list.append(card);
     });

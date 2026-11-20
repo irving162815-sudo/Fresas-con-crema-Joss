@@ -50,6 +50,12 @@
 <label class="product-option"><input type="radio" name="flavor" value="La Crocantita" required><img src="assets/productos/crocantita.jpeg" alt=""><span><b>La Crocantita</b><small>Con un toque crujiente</small><strong>$3.99</strong></span></label>
 <label class="product-option"><input type="radio" name="flavor" value="La Consentida" required><img src="assets/productos/consentida.jpeg" alt=""><span><b>La Consentida</b><small>Nuestra combinación especial</small><strong>$4.99</strong></span></label>
 </fieldset>
+<!-- La oferta se recibe desde el enlace de Promociones y el servidor confirma su precio. -->
+<input type="hidden" name="offerId" id="order-offer-id">
+<div class="selected-offer" id="selected-offer" hidden>
+<p id="selected-offer-message"></p>
+<button type="button" class="button button-outline" id="remove-selected-offer">Quitar oferta</button>
+</div>
 <p class="price-note">Precios en dólares (USD). Cada topping agrega $0.50 al total.</p>
 <!-- Cada topping suma cincuenta centavos al total que calcula el servidor. -->
 <fieldset class="topping-picker">

@@ -4,6 +4,8 @@ const dashboard = document.querySelector('#admin-dashboard');
 const adminMessage = document.querySelector('#admin-message');
 let dashboardData = { orders: [], conversations: [], customers: [], reports: [], promotions: [], offers: [] };
 let loggedIn = false;
+// Precios de lista usados para validar el precio promocional antes de enviarlo.
+const offerProductPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
 // Nombres visibles que corresponden a los cuatro estados que ve el cliente.
 const orderStatusLabels = {
   received: 'Recibido', preparing: 'En proceso', waiting_courier: 'Esperando el repartidor', sent: 'Enviado'
@@ -38,7 +40,8 @@ function renderOrders(orders) {
     const details = makeElement('div');
     details.append(makeElement('h3', '', `${order.flavor} — ${order.name}`));
     details.append(makeElement('p', '', `Teléfono: ${order.phone}`));
-    details.append(makeElement('p', '', order.basePrice == null ? 'Precio base: No especificado' : `Precio base: $${Number(order.basePrice).toFixed(2)}`));
+    details.append(makeElement('p', '', order.basePrice == null ? 'Precio base: No especificado' : `${order.offerTitle ? 'Precio de oferta' : 'Precio base'}: $${Number(order.basePrice).toFixed(2)}`));
+    if (order.offerTitle) details.append(makeElement('p', 'order-current-status', `Oferta aplicada: ${order.offerTitle} · Precio regular $${Number(order.regularPrice || 0).toFixed(2)}`));
     if (order.toppings?.length) details.append(makeElement('p', '', `Toppings: ${order.toppings.join(', ')} ($${Number(order.toppingUnitPrice ?? 0.5).toFixed(2)} cada uno)`));
     details.append(makeElement('p', '', order.totalPrice == null ? 'Total: No especificado' : `Total del pedido: $${Number(order.totalPrice).toFixed(2)}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));
@@ -219,6 +222,9 @@ function renderOffers(offers) {
     }
     const details = makeElement('div');
     details.append(makeElement('h3', '', offer.title), makeElement('p', '', offer.description));
+    if (offer.product && Number.isFinite(offer.price))
+      details.append(makeElement('p', 'order-current-status', `${offer.product} · Oferta $${Number(offer.price).toFixed(2)} (regular $${offerProductPrices[offer.product]?.toFixed(2) || '—'})`));
+    else details.append(makeElement('p', 'order-meta', 'Esta promoción anterior no tiene un producto y precio canjeables. Retírala y publícala nuevamente para habilitar el canje.'));
     details.append(makeElement('p', 'order-meta', `Publicada: ${new Date(offer.createdAt).toLocaleString('es-PA')}`));
     const remove = makeElement('button', 'delete-order', 'Retirar promoción');
     remove.type = 'button';
@@ -274,6 +280,13 @@ document.querySelector('#admin-logout').addEventListener('click', async () => {
 
 // Los botones de actualizar vuelven a consultar el tablero en Atlas.
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true).catch((error) => setStatus(error.message, true))));
+
+// Ajusta el límite del precio de oferta según el producto que eligió el administrador.
+document.querySelector('#offer-product')?.addEventListener('change', (event) => {
+  const price = document.querySelector('#offer-price');
+  const regularPrice = offerProductPrices[event.currentTarget.value];
+  if (price) price.max = regularPrice ? (regularPrice - 0.01).toFixed(2) : '2.98';
+});
 
 // Reduce la imagen seleccionada en el navegador antes de enviarla a Atlas.
 async function compressOfferImage(file) {
@@ -371,9 +384,11 @@ document.querySelector('#offer-form')?.addEventListener('submit', async (event) 
     const fields = Object.fromEntries(new FormData(form));
     message.textContent = fields.image?.name ? 'Convirtiendo y optimizando la imagen…' : 'Publicando la promoción…';
     const imageData = await compressOfferImage(fields.image);
-    const result = await adminApi('/api/admin/offers', { method: 'POST', body: JSON.stringify({ title: fields.title, description: fields.description, imageData }) });
+    const result = await adminApi('/api/admin/offers', { method: 'POST', body: JSON.stringify({ title: fields.title, description: fields.description,
+      product: fields.product, price: Number(fields.price), imageData }) });
     message.textContent = `La promoción “${result.offer.title}” ya está publicada en la sección Promociones.`;
     form.reset();
+    document.querySelector('#offer-product')?.dispatchEvent(new Event('change'));
     const preview = document.querySelector('#offer-image-preview');
     preview.removeAttribute('src'); preview.hidden = true;
     if (offerPreviewUrl) URL.revokeObjectURL(offerPreviewUrl);

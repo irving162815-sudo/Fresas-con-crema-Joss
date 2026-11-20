@@ -39,6 +39,9 @@ const orderSchema = new mongoose.Schema({
   phone: { type: String, required: true, maxlength: 25, trim: true },
   flavor: { type: String, required: true, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
   basePrice: { type: Number, required: true, min: 0 },
+  regularPrice: { type: Number, min: 0 },
+  offerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
+  offerTitle: { type: String, maxlength: 80, default: '' },
   toppingUnitPrice: { type: Number, default: toppingPrice, min: 0 },
   totalPrice: { type: Number, required: true, min: 0 },
   toppings: { type: [{ type: String, enum: allowedToppings }], default: [] },
@@ -98,6 +101,8 @@ const Promotion = mongoose.model('Promotion', promotionSchema);
 const offerSchema = new mongoose.Schema({
   title: { type: String, required: true, maxlength: 80, trim: true },
   description: { type: String, required: true, maxlength: 600, trim: true },
+  product: { type: String, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
+  price: { type: Number, min: 0.01 },
   imageData: { type: String, maxlength: 350000, default: '', select: false },
   createdAt: { type: Date, default: Date.now }
 });
@@ -258,8 +263,18 @@ app.get('/api/health', (_request, response) => response.json({ status: 'connecte
 
 // Muestra únicamente las promociones publicadas, con campos seguros para el catálogo público.
 app.get('/api/promotions', async (_request, response) => {
-  const offers = await Offer.find().select('title description createdAt +imageData').sort({ createdAt: -1 }).limit(12).lean();
-  return response.json({ offers });
+  const offers = await Offer.find({ product: { $in: [...productPrices.keys()] }, price: { $gt: 0 } })
+    .select('title description product price createdAt +imageData').sort({ createdAt: -1 }).limit(12).lean();
+  return response.json({ offers: offers.map((offer) => ({ ...offer, id: String(offer._id) })) });
+});
+
+// Devuelve los datos públicos de una promoción concreta para preparar el pedido.
+app.get('/api/promotions/:id', async (request, response) => {
+  if (!validObjectId(request.params.id)) return response.status(404).json({ message: 'No encontramos esa promoción.' });
+  const offer = await Offer.findById(request.params.id).select('title description product price').lean();
+  if (!offer?.product || !Number.isFinite(offer.price) || offer.price >= (productPrices.get(offer.product) || 0))
+    return response.status(404).json({ message: 'Esta promoción ya no está disponible para canje.' });
+  return response.json({ offer: { ...offer, id: String(offer._id) } });
 });
 
 // Crea una cuenta y una sesión; el hash de contraseña nunca se devuelve al navegador.
@@ -323,16 +338,26 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
   const address = typedAddress || 'Ubicación GPS compartida';
   const latitude = request.body.latitude === '' || request.body.latitude == null ? undefined : Number(request.body.latitude);
   const longitude = request.body.longitude === '' || request.body.longitude == null ? undefined : Number(request.body.longitude);
+  const offerId = text(request.body.offerId, 24);
   if (!name || !phone || !productPrices.has(flavor) || toppings.some((item) => !allowedToppings.includes(item)) || !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
     return response.status(400).json({ message: 'Completa tus datos, selecciona producto y método de pago, y acepta que usemos la información para atenderte.' });
   if ((latitude === undefined) !== (longitude === undefined) || (latitude !== undefined && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)))
     return response.status(400).json({ message: 'La ubicación GPS no es válida. Escribe tu dirección o vuelve a compartirla.' });
   if (!typedAddress && latitude === undefined) return response.status(400).json({ message: 'Escribe la dirección o comparte una ubicación GPS.' });
-  const basePrice = productPrices.get(flavor);
+  let selectedOffer = null;
+  if (offerId) {
+    if (!validObjectId(offerId)) return response.status(400).json({ message: 'La oferta seleccionada no es válida. Vuelve a elegirla desde Promociones.' });
+    selectedOffer = await Offer.findById(offerId).select('title product price');
+    if (!selectedOffer?.product || !Number.isFinite(selectedOffer.price) || selectedOffer.price <= 0 || selectedOffer.price >= (productPrices.get(selectedOffer.product) || 0))
+      return response.status(409).json({ message: 'Esta promoción ya no está disponible. Revisa las ofertas vigentes.' });
+    if (selectedOffer.product !== flavor) return response.status(400).json({ message: 'La oferta elegida no corresponde al producto seleccionado.' });
+  }
+  const regularPrice = productPrices.get(flavor);
+  const basePrice = selectedOffer ? selectedOffer.price : regularPrice;
   const totalPrice = Number((basePrice + toppings.length * toppingPrice).toFixed(2));
   // El cliente recibe una llave privada; en Atlas solo guardamos su huella cifrada con SHA-256.
   const trackingToken = crypto.randomBytes(32).toString('hex');
-  const order = await Order.create({ name, phone, flavor, basePrice, toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
+  const order = await Order.create({ name, phone, flavor, basePrice, regularPrice, offerId: selectedOffer?._id, offerTitle: selectedOffer?.title || '', toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
     trackingTokenHash: crypto.createHash('sha256').update(trackingToken).digest('hex'),
     customerId: request.session.customerId || undefined });
   const paymentInstructions = {
@@ -341,8 +366,9 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
     'Tarjeta Visa': 'El equipo coordinará contigo una forma segura de completar el pago. No envíes datos de tarjeta por este formulario.'
   };
   const extraNotice = toppings.length ? ` Incluye ${toppings.length} topping(s) a $${toppingPrice.toFixed(2)} cada uno.` : '';
+  const offerNotice = selectedOffer ? ` Se aplicó la oferta “${selectedOffer.title}”: producto a $${basePrice.toFixed(2)} (precio regular $${regularPrice.toFixed(2)}).` : '';
   return response.status(201).json({ id: String(order._id), trackingToken, status: order.status, statusUpdatedAt: order.statusUpdatedAt, totalPrice,
-    message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${extraNotice} ${paymentInstructions[paymentMethod]}` });
+    message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${offerNotice}${extraNotice} ${paymentInstructions[paymentMethod]}` });
 });
 
 // Devuelve solo el progreso del pedido si el visitante presenta su llave privada de seguimiento.
@@ -432,7 +458,7 @@ app.get('/api/admin/dashboard', requireAdmin, async (_request, response) => {
     Customer.find().select('-passwordHash').sort({ createdAt: -1 }).limit(1000).lean(),
     Report.find().sort({ createdAt: -1 }).limit(500).lean(),
     Promotion.find().sort({ createdAt: -1 }).limit(100).lean(),
-    Offer.find().select('title description createdAt').sort({ createdAt: -1 }).limit(100).lean()
+    Offer.find().select('title description product price createdAt').sort({ createdAt: -1 }).limit(100).lean()
   ]);
   return response.json({ orders, conversations, customers, reports, promotions, offers });
 });
@@ -441,11 +467,17 @@ app.get('/api/admin/dashboard', requireAdmin, async (_request, response) => {
 app.post('/api/admin/offers', requireAdmin, publicFormLimiter, async (request, response) => {
   const title = text(request.body.title, 80);
   const description = text(request.body.description, 600);
+  const product = text(request.body.product, 40);
+  const submittedPrice = Number(request.body.price);
   const imageData = typeof request.body.imageData === 'string' ? request.body.imageData : '';
-  if (!title || !description) return response.status(400).json({ message: 'Escribe el título y la descripción de la promoción.' });
+  if (!title || !description || !productPrices.has(product) || !Number.isFinite(submittedPrice))
+    return response.status(400).json({ message: 'Completa el título, la descripción, el producto y el precio promocional.' });
+  const price = Number(submittedPrice.toFixed(2));
+  if (price < 0.01 || price >= productPrices.get(product))
+    return response.status(400).json({ message: `El precio de oferta debe ser mayor que $0.00 y menor que el precio regular de ${product} ($${productPrices.get(product).toFixed(2)}).` });
   if (imageData && (imageData.length > 350000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(imageData)))
     return response.status(400).json({ message: 'La imagen no pudo prepararse para publicarla. Elige otra imagen y vuelve a intentarlo.' });
-  const offer = await Offer.create({ title, description, imageData });
+  const offer = await Offer.create({ title, description, product, price, imageData });
   return response.status(201).json({ offer: { id: String(offer._id), title: offer.title } });
 });
 

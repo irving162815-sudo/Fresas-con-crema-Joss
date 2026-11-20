@@ -914,7 +914,7 @@ position:fixed;
   background: #f5e5dd;
 }
 .campaign-form label { font-size: 11px; font-weight: 700; }
-.campaign-form input,.campaign-form textarea {
+.campaign-form input,.campaign-form select,.campaign-form textarea {
   width: 100%;
   margin: 0 0 9px;
   padding: 11px;
@@ -928,6 +928,14 @@ position:fixed;
 .campaign-form textarea { min-height: 105px; resize: vertical; }
 .campaign-form small { margin: -6px 0 10px; color: #806d65; font-size: 11px; line-height: 1.4; }
 .campaign-form .button { align-self: flex-start; }
+.selected-offer:not([hidden]) {
+  padding:13px;
+  border:1px solid #e4c34e;
+  border-radius:7px;
+  background:#fff8da
+}
+.selected-offer p { margin:0 0 9px; color:var(--berry); font-size:13px; font-weight:700 }
+.selected-offer .button { margin:0; padding:7px 10px; font-size:11px }
 .promotions-list { display: grid; gap: 10px; margin-top: 15px; }
 /* Ajustes móviles para el área de cuenta y el formulario de campañas. */
 @media(max-width:650px) {
@@ -1837,7 +1845,13 @@ overflow:hidden;
 background:#fff;
 border:1px solid #ead8cf;
 border-radius:9px;
-box-shadow:0 8px 20px #43241810
+box-shadow:0 8px 20px #43241810;
+transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease
+}
+.promotion-card:hover,.promotion-card:focus-within {
+transform:translateY(-5px);
+border-color:#e4c34e;
+box-shadow:0 15px 32px #43241822
 }
 .promotion-card img {
 display:block;
@@ -1859,6 +1873,14 @@ font-size:12px;
 line-height:1.65;
 white-space:pre-wrap
 }
+.promotion-price {
+  margin-top:12px!important;
+  color:var(--berry)!important;
+  font-size:17px!important;
+  font-weight:800
+}
+.promotion-redeem { display:inline-flex; margin-top:15px; text-decoration:none }
+.promotion-card:hover .promotion-redeem,.promotion-redeem:hover { background:var(--yellow); color:var(--ink) }
 .promotion-empty {
 grid-column:1/-1;
 padding:30px;
