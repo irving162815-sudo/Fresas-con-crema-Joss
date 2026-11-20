@@ -278,25 +278,66 @@ document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventL
 // Reduce la imagen seleccionada en el navegador antes de enviarla a Atlas.
 async function compressOfferImage(file) {
   if (!file || !file.name) return '';
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Elige una imagen JPG, PNG o WebP.');
-  if (file.size > 8 * 1024 * 1024) throw new Error('La imagen original debe pesar menos de 8 MB.');
-  const sourceUrl = URL.createObjectURL(file);
+  if (file.type && !file.type.startsWith('image/')) throw new Error('Selecciona un archivo de imagen.');
+  let bitmap = null;
+  let sourceUrl = '';
   try {
-    const image = new Image();
-    image.src = sourceUrl;
-    await image.decode();
-    if (image.naturalWidth * image.naturalHeight > 24000000) throw new Error('La resolución de la imagen es demasiado grande.');
-    const scale = Math.min(1, 1000 / Math.max(image.naturalWidth, image.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(image.naturalWidth * scale);
-    canvas.height = Math.round(image.naturalHeight * scale);
-    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-    let compressed = canvas.toDataURL('image/jpeg', 0.72);
-    if (compressed.length > 350000) compressed = canvas.toDataURL('image/jpeg', 0.5);
-    if (compressed.length > 350000) compressed = canvas.toDataURL('image/jpeg', 0.35);
-    if (compressed.length > 350000) throw new Error('No se pudo reducir la imagen lo suficiente. Prueba con otra más sencilla.');
-    return compressed;
-  } finally { URL.revokeObjectURL(sourceUrl); }
+    // El decodificador del navegador acepta más formatos que el selector JPG/PNG/WebP.
+    let source;
+    if (typeof createImageBitmap === 'function') {
+      try { bitmap = await createImageBitmap(file); source = bitmap; } catch { /* Continúa con el decodificador de imagen tradicional. */ }
+    }
+    if (!source) {
+      sourceUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.src = sourceUrl;
+      await image.decode();
+      source = image;
+    }
+
+    const sourceWidth = source.width || source.naturalWidth;
+    const sourceHeight = source.height || source.naturalHeight;
+    if (!sourceWidth || !sourceHeight) throw new Error('La imagen no tiene dimensiones que el navegador pueda leer.');
+
+    // Convierte cualquier formato decodificable a JPEG y reduce tamaño y calidad hasta el límite de Atlas.
+    const maxImageDataLength = 340000;
+    const maxDimensions = [1600, 1280, 1024, 800, 640, 480];
+    const qualities = [0.82, 0.68, 0.54, 0.4, 0.28, 0.18];
+    for (const maxDimension of maxDimensions) {
+      const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+      canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('El navegador no pudo preparar la imagen. Prueba con otro formato.');
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      // El fondo blanco conserva una apariencia limpia si el archivo tenía transparencia.
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of qualities) {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+        if (!blob) continue;
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('No se pudo leer la imagen convertida.'));
+          reader.readAsDataURL(blob);
+        });
+        if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/jpeg;base64,') && dataUrl.length <= maxImageDataLength)
+          return dataUrl;
+      }
+    }
+    throw new Error('La imagen es demasiado compleja para procesarla en este navegador. Prueba exportarla como JPG o PNG y vuelve a subirla.');
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('La imagen es demasiado compleja')) throw error;
+    throw new Error('No se pudo abrir esta imagen. Prueba con JPG, PNG o WebP y vuelve a intentarlo.');
+  } finally {
+    bitmap?.close();
+    if (sourceUrl) URL.revokeObjectURL(sourceUrl);
+  }
 }
 
 // Enseña una vista previa local de la imagen que se va a publicar.
@@ -309,14 +350,14 @@ document.querySelector('#offer-image')?.addEventListener('change', (event) => {
   offerPreviewUrl = '';
   preview.hidden = !file;
   if (!file) return;
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+  if (file.type && !file.type.startsWith('image/')) {
     preview.hidden = true;
-    message.textContent = 'Elige una imagen JPG, PNG o WebP de menos de 8 MB.';
+    message.textContent = 'Elige un archivo de imagen. Se convertirá y reducirá automáticamente al publicarlo.';
     return;
   }
   offerPreviewUrl = URL.createObjectURL(file);
   preview.src = offerPreviewUrl;
-  message.textContent = '';
+  message.textContent = 'Imagen seleccionada. Se optimizará automáticamente al publicar.';
 });
 
 // Publica el contenido y la imagen desde el panel, sin modificar código fuente.
@@ -328,6 +369,7 @@ document.querySelector('#offer-form')?.addEventListener('submit', async (event) 
   submit.disabled = true;
   try {
     const fields = Object.fromEntries(new FormData(form));
+    message.textContent = fields.image?.name ? 'Convirtiendo y optimizando la imagen…' : 'Publicando la promoción…';
     const imageData = await compressOfferImage(fields.image);
     const result = await adminApi('/api/admin/offers', { method: 'POST', body: JSON.stringify({ title: fields.title, description: fields.description, imageData }) });
     message.textContent = `La promoción “${result.offer.title}” ya está publicada en la sección Promociones.`;

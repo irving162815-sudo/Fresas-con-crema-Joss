@@ -119,7 +119,8 @@
 <label for="offer-description">Descripción</label>
 <textarea id="offer-description" name="description" required maxlength="600" placeholder="Cuéntales a tus clientes qué incluye la promoción."></textarea>
 <label for="offer-image">Imagen promocional (opcional)</label>
-<input id="offer-image" name="image" type="file" accept="image/jpeg,image/png,image/webp">
+<input id="offer-image" name="image" type="file" accept="image/*">
+<small>Admite imágenes de distintos formatos y tamaños; se convertirán y optimizarán automáticamente para la página.</small>
 <img id="offer-image-preview" class="offer-image-preview" alt="Vista previa de la promoción" hidden>
 <button class="button button-dark" type="submit">Publicar promoción <span>→</span></button>
 <p class="form-message" id="offer-message" role="status" aria-live="polite"></p>

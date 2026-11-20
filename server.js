@@ -109,7 +109,7 @@ app.use(helmet({
   contentSecurityPolicy: { directives: {
     defaultSrc: ["'self'"], baseUri: ["'self'"], objectSrc: ["'none'"],
     scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'], imgSrc: ["'self'", 'data:', 'https:'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'], imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
     connectSrc: ["'self'"], frameSrc: ["'self'", 'https://www.openstreetmap.org'],
     formAction: ["'self'"], frameAncestors: ["'self'"]
   } }
@@ -444,7 +444,7 @@ app.post('/api/admin/offers', requireAdmin, publicFormLimiter, async (request, r
   const imageData = typeof request.body.imageData === 'string' ? request.body.imageData : '';
   if (!title || !description) return response.status(400).json({ message: 'Escribe el título y la descripción de la promoción.' });
   if (imageData && (imageData.length > 350000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(imageData)))
-    return response.status(400).json({ message: 'La imagen debe ser JPEG y pesar menos de unos 250 KB después de comprimirla.' });
+    return response.status(400).json({ message: 'La imagen no pudo prepararse para publicarla. Elige otra imagen y vuelve a intentarlo.' });
   const offer = await Offer.create({ title, description, imageData });
   return response.status(201).json({ offer: { id: String(offer._id), title: offer.title } });
 });

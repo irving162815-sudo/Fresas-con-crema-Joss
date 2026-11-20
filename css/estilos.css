@@ -926,6 +926,7 @@ position:fixed;
   font-size: 12px;
 }
 .campaign-form textarea { min-height: 105px; resize: vertical; }
+.campaign-form small { margin: -6px 0 10px; color: #806d65; font-size: 11px; line-height: 1.4; }
 .campaign-form .button { align-self: flex-start; }
 .promotions-list { display: grid; gap: 10px; margin-top: 15px; }
 /* Ajustes móviles para el área de cuenta y el formulario de campañas. */
