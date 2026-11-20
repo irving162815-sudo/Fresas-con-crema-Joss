@@ -2543,3 +2543,188 @@ body {
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
+
+/* Ajustes dedicados al formulario de pedidos en teléfonos estrechos. */
+@media(max-width:650px) {
+  .order-page {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    width:100%;
+    gap:20px;
+    padding:38px 5% 52px;
+  }
+  .order-page>* { width:100%; min-width:0; }
+  .order-intro { padding:0; }
+  .order-intro h2 { font-size:clamp(35px,10vw,44px); }
+  .order-steps { gap:8px; margin:18px 0 12px; }
+  .order-steps li { min-width:0; padding:10px 11px; }
+  .privacy-note { overflow-wrap:anywhere; }
+  .order-form {
+    display:flex;
+    width:100%;
+    min-width:0;
+    padding:18px 14px;
+    gap:0;
+  }
+  .order-form>* { min-width:0; max-width:100%; }
+  .order-form input:not([type=radio]):not([type=checkbox]),.order-form textarea { width:100%; min-width:0; }
+  .product-picker { grid-template-columns:minmax(0,1fr); gap:9px; }
+  .product-option {
+    position:relative;
+    display:grid;
+    grid-template-columns:68px minmax(0,1fr);
+    align-items:center;
+    gap:8px;
+    min-width:0;
+    min-height:88px;
+    padding:8px;
+  }
+  .product-option input {
+    position:absolute;
+    top:8px;
+    right:8px;
+    z-index:1;
+    width:18px;
+    height:18px;
+    margin:0;
+  }
+  .product-option img {
+    grid-column:1;
+    grid-row:1;
+    width:68px;
+    height:68px;
+    border:0;
+    border-radius:7px;
+  }
+  .product-option>span {
+    grid-column:2;
+    grid-row:1;
+    min-width:0;
+    gap:3px;
+    padding:4px 28px 4px 0;
+  }
+  .product-option small { overflow-wrap:anywhere; }
+  .topping-picker { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .topping-option {
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    min-width:0;
+  }
+  .topping-option input {
+    position:absolute;
+    top:7px;
+    right:7px;
+    z-index:1;
+    width:19px;
+    height:19px;
+    margin:0;
+    padding:0;
+  }
+  .topping-option img { width:100%; height:90px; object-fit:cover; }
+  .topping-option span { min-width:0; padding:7px 8px 9px; font-size:9px; overflow-wrap:anywhere; }
+  .payment-option { min-width:0; padding:0 6px 0 0; }
+  .payment-option>span { min-width:0; padding:9px 6px 9px 2px; }
+  .payment-option small { overflow-wrap:anywhere; }
+  .order-total,.payment-help { overflow-wrap:anywhere; }
+}
+@media(max-width:370px) {
+  .order-page { padding-right:4%; padding-left:4%; }
+  .order-form { padding:16px 11px; }
+  .topping-picker { grid-template-columns:minmax(0,1fr); }
+  .topping-option { display:grid; grid-template-columns:78px minmax(0,1fr); align-items:center; }
+  .topping-option img { grid-column:1; grid-row:1; width:78px; height:68px; }
+  .topping-option span { grid-column:2; grid-row:1; padding-right:30px; }
+}
+
+/* Pie de página ordenado y tarjetas de contacto con destellos al interactuar. */
+.site-footer {
+  grid-template-columns:minmax(0,1.2fr) repeat(2,minmax(0,1fr));
+  align-items:start;
+  gap:22px 34px;
+  padding:38px 9% 22px;
+}
+.footer-brand-block>.brand { width:max-content; max-width:100%; }
+.footer-brand-block>p { max-width:260px; margin:13px 0 0; color:#eedbd2; font-size:11px; line-height:1.75; }
+.footer-contact { display:grid; align-content:start; justify-items:start; gap:10px; }
+.footer-heading { margin:2px 0 3px; color:#f5d66a; font-size:10px; font-weight:700; letter-spacing:1.3px; text-transform:uppercase; }
+.footer-contact-card {
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  min-width:0;
+  padding:10px 12px;
+  overflow:hidden;
+  border:1px solid #fff3;
+  border-radius:12px;
+  background:#ffffff0a;
+  transition:transform .25s,border-color .25s,background .25s,box-shadow .25s;
+  isolation:isolate;
+}
+.footer-contact-card:before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  top:-35%;
+  left:-80%;
+  width:45%;
+  height:170%;
+  transform:rotate(22deg);
+  background:linear-gradient(90deg,transparent,#fff9,transparent);
+  opacity:0;
+}
+.footer-contact-card:after {
+  content:"✦  ✧";
+  position:absolute;
+  top:3px;
+  right:9px;
+  color:#ffe88a;
+  font-size:12px;
+  letter-spacing:8px;
+  opacity:0;
+  pointer-events:none;
+}
+.footer-contact-card img { width:34px; height:34px; flex:0 0 34px; object-fit:contain; border-radius:50%; background:white; }
+.footer-contact-card>span { display:grid; gap:2px; min-width:0; }
+.footer-contact-card b { color:white; font-size:11px; }
+.footer-contact-card small { color:#eedbd2; font-size:9px; line-height:1.4; overflow-wrap:anywhere; }
+.footer-contact-card:hover,.footer-contact-card:focus-visible {
+  transform:translateY(-3px);
+  border-color:#ffdf62;
+  background:#ffffff16;
+  box-shadow:0 8px 24px #170f0d44;
+  outline:none;
+}
+.footer-contact-card:hover:before,.footer-contact-card:focus-visible:before { animation:footerShine .75s ease-out; }
+.footer-contact-card:hover:after,.footer-contact-card:focus-visible:after { animation:footerSparkle .85s ease-out; }
+.footer-report-link { display:inline-flex; align-items:center; gap:8px; margin-top:2px; }
+.footer-report-link span { transition:transform .2s; }
+.footer-report-link:hover span { transform:translate(2px,-2px); }
+.copyright { grid-column:1/-1; width:100%; margin:0; padding-top:15px; border-top:1px solid #fff2; }
+@keyframes footerShine {
+  0% { left:-80%; opacity:0; }
+  20% { opacity:1; }
+  100% { left:140%; opacity:0; }
+}
+@keyframes footerSparkle {
+  0% { transform:scale(.45) rotate(-25deg); opacity:0; }
+  35% { transform:scale(1.35) rotate(8deg); opacity:1; }
+  100% { transform:scale(.85) rotate(20deg); opacity:0; }
+}
+@media(max-width:760px) {
+  .site-footer { grid-template-columns:1fr 1fr; padding:32px 7% 20px; gap:22px 15px; }
+  .footer-brand-block { grid-column:1/-1; }
+  .footer-contact { min-width:0; }
+}
+@media(max-width:420px) {
+  .site-footer { grid-template-columns:minmax(0,1fr); }
+  .footer-brand-block,.footer-contact,.copyright { grid-column:1; }
+  .footer-contact { width:100%; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .footer-contact-card:hover:before,.footer-contact-card:focus-visible:before,
+  .footer-contact-card:hover:after,.footer-contact-card:focus-visible:after { animation:none; }
+}

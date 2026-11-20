@@ -49,13 +49,26 @@ function makeHeader() {
 // Crea el pie de página compartido con redes, WhatsApp y reporte de fallas.
 function makeFooter() {
   return `<footer class="site-footer">
-    <a class="brand" href="index.html"><img src="assets/logo-jossys-berry.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
-    <div class="footer-social"><p>Encuéntranos y escríbenos</p>
-      <a class="social-link" href="https://www.instagram.com/fresa_mania01?dmpr=ZWQxOHFnbTQ0Z3Rw" target="_blank" rel="noopener noreferrer" aria-label="Instagram Fresamania"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="ig-dot" cx="18" cy="6" r="1"/></svg> Fresamania</a>
-      <a class="social-link" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer">WhatsApp 6434-7297</a>
-      <a class="social-link" href="https://wa.me/50766260366" target="_blank" rel="noopener noreferrer">WhatsApp 6626-0366</a>
-      <a class="footer-report-link" href="reportar.html">Reportar una falla</a>
-    </div><p class="copyright">© <span data-year></span> Jossy’s Berry PTY · Frescura y dulzura</p>
+    <div class="footer-brand-block">
+      <a class="brand" href="index.html"><img src="assets/logo-jossys-berry.jpeg" alt=""><span>Jossy’s <b>Berry PTY</b></span></a>
+      <p>Fresas con crema, frescura y dulzura para compartir.</p>
+    </div>
+    <div class="footer-contact">
+      <p class="footer-heading">Hablemos</p>
+      <a class="footer-contact-card" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp al 6434-7297; número alternativo 6626-0366">
+        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/icono-circular-verde-estilo-whatsapp-chat-llamada-aplicaciones-mensajeria_705838-13521.avif" alt="" loading="lazy">
+        <span><b>WhatsApp</b><small>6434-7297 · 6626-0366</small></span>
+      </a>
+    </div>
+    <div class="footer-contact">
+      <p class="footer-heading">Síguenos y ayuda</p>
+      <a class="footer-contact-card" href="https://www.instagram.com/fresa_mania01?dmpr=ZWQxOHFnbTQ0Z3Rw" target="_blank" rel="noopener noreferrer" aria-label="Visitar Instagram Fresamania">
+        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/icono-logotipo-vector-instagram-logotipo-redes-sociales_901408-392.avif" alt="" loading="lazy">
+        <span><b>Instagram</b><small>@fresa_mania01 · Fresamania</small></span>
+      </a>
+      <a class="footer-report-link" href="reportar.html">Reportar una falla <span aria-hidden="true">↗</span></a>
+    </div>
+    <p class="copyright">© <span data-year></span> Jossy’s Berry PTY · Frescura y dulzura</p>
   </footer>`;
 }
 
