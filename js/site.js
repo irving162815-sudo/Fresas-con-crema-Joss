@@ -56,14 +56,14 @@ function makeFooter() {
     <div class="footer-contact">
       <p class="footer-heading">Hablemos</p>
       <a class="footer-contact-card" href="https://wa.me/50764347297" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp al 6434-7297; número alternativo 6626-0366">
-        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/icono-circular-verde-estilo-whatsapp-chat-llamada-aplicaciones-mensajeria_705838-13521.avif" alt="" loading="lazy">
+        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/Logo%20de%20whatsapp.avif" alt="" loading="lazy">
         <span><b>WhatsApp</b><small>6434-7297 · 6626-0366</small></span>
       </a>
     </div>
     <div class="footer-contact">
       <p class="footer-heading">Síguenos y ayuda</p>
       <a class="footer-contact-card" href="https://www.instagram.com/fresa_mania01?dmpr=ZWQxOHFnbTQ0Z3Rw" target="_blank" rel="noopener noreferrer" aria-label="Visitar Instagram Fresamania">
-        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/icono-logotipo-vector-instagram-logotipo-redes-sociales_901408-392.avif" alt="" loading="lazy">
+        <img src="Imagenes%20de%20la%20pagina/Imagenes%20adicionales/Logo%20de%20Instagran.avif" alt="" loading="lazy">
         <span><b>Instagram</b><small>@fresa_mania01 · Fresamania</small></span>
       </a>
       <a class="footer-report-link" href="reportar.html">Reportar una falla <span aria-hidden="true">↗</span></a>

@@ -2688,6 +2688,9 @@ body {
   pointer-events:none;
 }
 .footer-contact-card img { width:34px; height:34px; flex:0 0 34px; object-fit:contain; border-radius:50%; background:white; }
+.social-icon:has(img) { background:#fffdf9; }
+.social-icon img { display:block; width:32px; height:32px; object-fit:contain; }
+.social-icon.whatsapp-icon { background:#e7f5e9; }
 .footer-contact-card>span { display:grid; gap:2px; min-width:0; }
 .footer-contact-card b { color:white; font-size:11px; }
 .footer-contact-card small { color:#eedbd2; font-size:9px; line-height:1.4; overflow-wrap:anywhere; }
