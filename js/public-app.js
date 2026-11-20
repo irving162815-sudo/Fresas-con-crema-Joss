@@ -1,6 +1,12 @@
 // Formularios públicos: envían los datos al servidor para guardarlos en MongoDB Atlas.
 // Guarda en el navegador la llave aleatoria que identifica la conversación del chat.
 const CHAT_ID_KEY = 'jossysBerryChatId';
+// El token privado permite seguir el pedido desde el mismo navegador sin pedir la cuenta.
+const ORDER_TRACKS_KEY = 'jossysBerryTrackedOrders';
+const ORDER_STEPS = [
+  ['received', 'Recibido'], ['preparing', 'En proceso'],
+  ['waiting_courier', 'Esperando el repartidor'], ['sent', 'Enviado']
+];
 // Lista segura de páginas a las que el chatbot puede dirigir a los visitantes.
 const chatPageLinks = new Map([
   ['menu.html', 'Abrir el menú'], ['pedido.html', 'Ir a Pedidos'], ['promociones.html', 'Ver promociones'],
@@ -53,6 +59,78 @@ async function apiRequest(url, options = {}) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.message || 'No se pudo conectar con el servidor.');
   return result;
+}
+
+// Recupera únicamente los identificadores y llaves privadas guardadas al hacer pedidos.
+function readTrackedOrders() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ORDER_TRACKS_KEY) || '[]');
+    return Array.isArray(saved) ? saved.filter((item) => /^[a-f0-9]{24}$/i.test(item.id) && /^[a-f0-9]{64}$/i.test(item.token)).slice(0, 10) : [];
+  } catch { return []; }
+}
+
+// Guarda la llave privada del pedido en el navegador para volver a consultar su progreso.
+function rememberTrackedOrder(order) {
+  const previous = readTrackedOrders().filter((item) => item.id !== order.id);
+  try {
+    localStorage.setItem(ORDER_TRACKS_KEY, JSON.stringify([{ id: order.id, token: order.trackingToken }, ...previous].slice(0, 10)));
+    return true;
+  } catch { return false; }
+}
+
+// Dibuja el avance y consulta solo estados públicos, sin exponer dirección o teléfono.
+async function refreshOrderTracking() {
+  const section = document.querySelector('#order-tracking');
+  const area = document.querySelector('#tracked-orders');
+  if (!section || !area) return;
+  const orders = readTrackedOrders();
+  section.hidden = orders.length === 0;
+  area.replaceChildren();
+  if (!orders.length) return;
+
+  const cards = orders.map((item) => {
+    const card = document.createElement('article');
+    card.className = 'tracked-order-card';
+    const title = document.createElement('h3');
+    title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()}`;
+    const message = document.createElement('p');
+    message.className = 'tracking-status-message';
+    message.textContent = 'Consultando el estado…';
+    card.append(title, message);
+    area.append(card);
+    return { item, card, title, message };
+  });
+
+  await Promise.all(cards.map(async ({ item, card, title, message }) => {
+    try {
+      const result = await apiRequest(`/api/orders/${encodeURIComponent(item.id)}/status`, {
+        headers: { 'X-Order-Tracking-Token': item.token }
+      });
+      title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()} · ${result.flavor}`;
+      message.textContent = `Estado actual: ${ORDER_STEPS.find(([value]) => value === result.status)?.[1] || 'Recibido'}`;
+      const steps = document.createElement('ol');
+      steps.className = 'order-progress';
+      const activeIndex = Math.max(0, ORDER_STEPS.findIndex(([value]) => value === result.status));
+      ORDER_STEPS.forEach(([value, label], index) => {
+        const step = document.createElement('li');
+        step.textContent = label;
+        step.className = index < activeIndex ? 'is-complete' : index === activeIndex ? 'is-current' : '';
+        if (index === activeIndex) step.setAttribute('aria-current', 'step');
+        steps.append(step);
+      });
+      const updated = document.createElement('small');
+      updated.textContent = `Última actualización: ${new Date(result.statusUpdatedAt).toLocaleString('es-PA')}`;
+      card.append(steps, updated);
+    } catch (error) {
+      message.textContent = error.message || 'No pudimos consultar el estado. Intenta de nuevo más tarde.';
+      if (error.message?.includes('No encontramos ese pedido')) {
+        const active = readTrackedOrders().filter((entry) => entry.id !== item.id);
+        localStorage.setItem(ORDER_TRACKS_KEY, JSON.stringify(active));
+        card.remove();
+        if (!active.length) section.hidden = true;
+      }
+    }
+  }));
 }
 
 // Muestra el resultado de un formulario debajo del botón de envío.
@@ -148,6 +226,10 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
       ...fields, consent: fields.consent === 'on'
     }) });
     showMessage(message, result.message);
+    // Conserva el acceso privado y muestra inmediatamente el seguimiento al cliente.
+    rememberTrackedOrder(result);
+    await refreshOrderTracking();
+    document.querySelector('#order-tracking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     form.reset();
     document.querySelector('#payment-help').textContent = 'Selecciona un método de pago. El equipo confirmará el total antes de completar tu pedido.';
     updateOrderTotal();
@@ -158,6 +240,14 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
     document.querySelector('#location-status').textContent = 'También puedes escribir tu dirección arriba.';
   } catch (error) { showMessage(message, error.message, true); }
   finally { submit.disabled = false; submit.removeAttribute('aria-busy'); }
+});
+
+// Actualiza los estados guardados mientras la página de pedidos permanece abierta.
+document.addEventListener('DOMContentLoaded', () => {
+  refreshOrderTracking();
+  window.setInterval(() => {
+    if (!document.hidden) refreshOrderTracking();
+  }, 15000);
 });
 
 // Registra la cuenta en Atlas; el servidor cifra la contraseña y abre la sesión segura.
@@ -266,10 +356,6 @@ function renderChat(conversation) {
   const messages = document.querySelector('#assistant-messages');
   if (!messages) return;
   messages.replaceChildren();
-  const privacy = document.createElement('p');
-  privacy.className = 'assistant-privacy';
-  privacy.textContent = 'Chat automático: las preguntas reconocidas reciben respuestas predefinidas. Las demás se guardan en la bandeja Admin para que te responda el equipo. Finaliza y borra el chat al terminar.';
-  messages.append(privacy);
   if (!conversation) {
     const welcome = document.createElement('p');
     welcome.className = 'bot-message';

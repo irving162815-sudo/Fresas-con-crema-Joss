@@ -65,7 +65,7 @@ function makeAssistant() {
   <button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Abrir chatbot">✦ <span>¿Te ayudo?</span></button>
   <aside class="assistant-panel" id="assistant-panel" aria-label="Chatbot Berry" hidden>
     <div class="assistant-head"><div><span class="assistant-spark">✦</span><strong>Chatbot Berry</strong><small>Tu ayudante de Jossy’s Berry 🍓</small></div><button type="button" id="assistant-close" aria-label="Cerrar chat">×</button></div>
-    <div class="assistant-messages" id="assistant-messages" aria-live="polite"><p class="assistant-privacy">Chat automático de Jossy’s Berry. Si no reconoce tu pregunta, la enviará al equipo. Los mensajes se guardan hasta que finalices y borres el chat.</p><p class="bot-message">¡Hola! Puedo ayudarte con el menú, precios, toppings, pedidos y pagos. Para hablar con una persona, pídemelo aquí.</p></div>
+    <div class="assistant-messages" id="assistant-messages" aria-live="polite"><p class="bot-message">¡Hola! 🍓 Puedo ayudarte con el menú, precios, toppings, pedidos y pagos. Para hablar con una persona, pídemelo aquí.</p></div>
     <div class="quick-questions" id="assistant-suggestions" aria-label="Sugerencias de preguntas"></div>
     <form id="assistant-form" class="assistant-form"><input id="assistant-input" autocomplete="off" aria-label="Escribe tu pregunta" placeholder="Escribe tu pregunta…"><button type="submit" aria-label="Enviar mensaje">➤</button></form>
   </aside>`;

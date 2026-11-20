@@ -43,6 +43,9 @@ const orderSchema = new mongoose.Schema({
   totalPrice: { type: Number, required: true, min: 0 },
   toppings: { type: [{ type: String, enum: allowedToppings }], default: [] },
   paymentMethod: { type: String, enum: ['Efectivo', 'Yappy', 'Tarjeta Visa'], default: 'Efectivo' },
+  status: { type: String, enum: ['received', 'preparing', 'waiting_courier', 'sent'], default: 'received' },
+  statusUpdatedAt: { type: Date, default: Date.now },
+  trackingTokenHash: { type: String, select: false },
   address: { type: String, required: true, maxlength: 250, trim: true },
   latitude: { type: Number, min: -90, max: 90 },
   longitude: { type: Number, min: -180, max: 180 },
@@ -139,6 +142,7 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHea
 const publicFormLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 40, standardHeaders: 'draft-8', legacyHeaders: false });
 const chatReadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false });
 const chatMessageLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: 'draft-8', legacyHeaders: false });
+const orderTrackingLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 90, standardHeaders: 'draft-8', legacyHeaders: false });
 
 function text(value, maxLength) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
@@ -326,7 +330,10 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
   if (!typedAddress && latitude === undefined) return response.status(400).json({ message: 'Escribe la dirección o comparte una ubicación GPS.' });
   const basePrice = productPrices.get(flavor);
   const totalPrice = Number((basePrice + toppings.length * toppingPrice).toFixed(2));
+  // El cliente recibe una llave privada; en Atlas solo guardamos su huella cifrada con SHA-256.
+  const trackingToken = crypto.randomBytes(32).toString('hex');
   const order = await Order.create({ name, phone, flavor, basePrice, toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
+    trackingTokenHash: crypto.createHash('sha256').update(trackingToken).digest('hex'),
     customerId: request.session.customerId || undefined });
   const paymentInstructions = {
     Efectivo: 'Pagarás al recibir; el equipo confirmará el total y la entrega por WhatsApp.',
@@ -334,7 +341,22 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
     'Tarjeta Visa': 'El equipo coordinará contigo una forma segura de completar el pago. No envíes datos de tarjeta por este formulario.'
   };
   const extraNotice = toppings.length ? ` Incluye ${toppings.length} topping(s) a $${toppingPrice.toFixed(2)} cada uno.` : '';
-  return response.status(201).json({ id: String(order._id), totalPrice, message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${extraNotice} ${paymentInstructions[paymentMethod]}` });
+  return response.status(201).json({ id: String(order._id), trackingToken, status: order.status, statusUpdatedAt: order.statusUpdatedAt, totalPrice,
+    message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${extraNotice} ${paymentInstructions[paymentMethod]}` });
+});
+
+// Devuelve solo el progreso del pedido si el visitante presenta su llave privada de seguimiento.
+app.get('/api/orders/:id/status', orderTrackingLimiter, async (request, response) => {
+  const token = request.get('x-order-tracking-token') || '';
+  if (!validObjectId(request.params.id) || !/^[a-f0-9]{64}$/i.test(token))
+    return response.status(404).json({ message: 'No encontramos ese pedido. Usa el mismo navegador donde lo realizaste.' });
+  const order = await Order.findById(request.params.id).select('+trackingTokenHash').lean();
+  if (!order?.trackingTokenHash) return response.status(404).json({ message: 'No encontramos ese pedido. Usa el mismo navegador donde lo realizaste.' });
+  const suppliedHash = crypto.createHash('sha256').update(token).digest();
+  const savedHash = Buffer.from(order.trackingTokenHash, 'hex');
+  if (savedHash.length !== suppliedHash.length || !crypto.timingSafeEqual(savedHash, suppliedHash))
+    return response.status(404).json({ message: 'No encontramos ese pedido. Usa el mismo navegador donde lo realizaste.' });
+  return response.json({ id: String(order._id), flavor: order.flavor, status: order.status || 'received', statusUpdatedAt: order.statusUpdatedAt || order.createdAt });
 });
 
 // Recibe reportes públicos con límites de texto para reducir abuso y datos innecesarios.
@@ -460,6 +482,17 @@ app.delete('/api/admin/chats/:id', requireAdmin, async (request, response) => {
 app.delete('/api/admin/orders/:id', requireAdmin, async (request, response) => {
   if (!validObjectId(request.params.id)) return response.status(400).json({ message: 'Identificador inválido.' });
   await Order.findByIdAndDelete(request.params.id); return response.json({ ok: true });
+});
+
+// El administrador actualiza el estado que aparece en el seguimiento privado del cliente.
+app.patch('/api/admin/orders/:id/status', requireAdmin, async (request, response) => {
+  if (!validObjectId(request.params.id)) return response.status(400).json({ message: 'Identificador de pedido inválido.' });
+  const status = text(request.body.status, 30);
+  if (!['received', 'preparing', 'waiting_courier', 'sent'].includes(status))
+    return response.status(400).json({ message: 'Elige uno de los estados disponibles para el pedido.' });
+  const order = await Order.findByIdAndUpdate(request.params.id, { status, statusUpdatedAt: new Date() }, { new: true, runValidators: true }).select('status statusUpdatedAt');
+  return order ? response.json({ status: order.status, statusUpdatedAt: order.statusUpdatedAt })
+    : response.status(404).json({ message: 'No encontramos ese pedido.' });
 });
 
 app.patch('/api/admin/reports/:id/resolve', requireAdmin, async (request, response) => {

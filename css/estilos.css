@@ -636,6 +636,52 @@ grid-column:2;
   color:#942e4a;
   cursor:pointer
 }
+.order-status-controls {
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  color:#725e56;
+  font-size:12px
+}
+.order-status-controls select {
+  max-width:100%;
+  border:1px solid #d9b2a3;
+  border-radius:5px;
+  padding:8px 10px;
+  background:#fff;
+  color:var(--ink)
+}
+.order-current-status { font-weight:700; color:var(--berry)!important }
+.order-tracking { scroll-margin-top:24px }
+.tracked-orders { display:grid; gap:12px }
+.tracked-order-card {
+  padding:17px;
+  border:1px solid #ead8cf;
+  border-radius:10px;
+  background:#fff
+}
+.tracked-order-card h3 { margin:0 0 6px; font:700 19px var(--serif) }
+.tracked-order-card p { margin:0; color:#725e56; font-size:13px }
+.tracked-order-card small { display:block; margin-top:12px; color:#806d65; font-size:11px }
+.order-progress {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:14px 0 0;
+  padding:0;
+  list-style:none
+}
+.order-progress li {
+  padding:9px 7px;
+  border-top:3px solid #ead8cf;
+  color:#806d65;
+  font-size:11px;
+  text-align:center
+}
+.order-progress li.is-complete,.order-progress li.is-current { border-color:var(--berry); color:var(--berry); font-weight:700 }
+.order-progress li.is-current { background:#fff8da }
 .empty-orders {
 color:#806d65;
   font-size:13px
@@ -809,6 +855,7 @@ position:fixed;
 }
 .footer-report-link:hover { background: #ffdf62; color: #39241c; }
 @media(max-width:650px) {
+.order-progress { grid-template-columns:1fr 1fr }
   .report-page { grid-template-columns: 1fr; gap: 22px; }
   .report-page h2 { font-size: 40px; }
   .report-form { padding: 21px; }
@@ -953,13 +1000,6 @@ flex:1;
   display:flex;
   flex-direction:column;
   gap:9px
-}
-.assistant-privacy {
-max-width:100%;
-margin:0;
-color:#806d65;
-font-size:9px;
-line-height:1.4
 }
 .chat-delete-button {
   align-self:flex-start;

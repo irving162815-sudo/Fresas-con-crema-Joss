@@ -4,6 +4,10 @@ const dashboard = document.querySelector('#admin-dashboard');
 const adminMessage = document.querySelector('#admin-message');
 let dashboardData = { orders: [], conversations: [], customers: [], reports: [], promotions: [], offers: [] };
 let loggedIn = false;
+// Nombres visibles que corresponden a los cuatro estados que ve el cliente.
+const orderStatusLabels = {
+  received: 'Recibido', preparing: 'En proceso', waiting_courier: 'Esperando el repartidor', sent: 'Enviado'
+};
 
 // Llama a la API protegida y convierte errores del servidor en mensajes legibles.
 async function adminApi(url, options = {}) {
@@ -39,6 +43,7 @@ function renderOrders(orders) {
     details.append(makeElement('p', '', order.totalPrice == null ? 'Total: No especificado' : `Total del pedido: $${Number(order.totalPrice).toFixed(2)}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));
     details.append(makeElement('p', '', `Método de pago elegido: ${order.paymentMethod || 'No especificado'}`));
+    details.append(makeElement('p', 'order-current-status', `Estado para el cliente: ${orderStatusLabels[order.status] || orderStatusLabels.received}`));
     details.append(makeElement('p', 'order-meta', `Recibido: ${new Date(order.createdAt).toLocaleString('es-PA')}`));
     if (Number.isFinite(order.latitude) && Number.isFinite(order.longitude)) {
       const map = makeElement('a', '', 'Ver ubicación en el mapa ↗');
@@ -51,7 +56,26 @@ function renderOrders(orders) {
       try { await adminApi(`/api/admin/orders/${order._id}`, { method: 'DELETE' }); await refreshDashboard(true); }
       catch (error) { setStatus(error.message, true); }
     });
-    card.append(details, remove); list.append(card);
+    const statusControls = makeElement('label', 'order-status-controls', 'Actualizar estado del pedido');
+    const statusSelect = makeElement('select');
+    statusSelect.setAttribute('aria-label', `Estado de pedido de ${order.name}`);
+    Object.entries(orderStatusLabels).forEach(([value, label]) => {
+      const option = makeElement('option', '', label);
+      option.value = value;
+      option.selected = (order.status || 'received') === value;
+      statusSelect.append(option);
+    });
+    statusSelect.addEventListener('change', async () => {
+      statusSelect.disabled = true;
+      try {
+        await adminApi(`/api/admin/orders/${order._id}/status`, { method: 'PATCH', body: JSON.stringify({ status: statusSelect.value }) });
+        setStatus(`Estado del pedido de ${order.name} actualizado.`);
+        await refreshDashboard(true);
+      } catch (error) { setStatus(error.message, true); statusSelect.value = order.status || 'received'; }
+      finally { statusSelect.disabled = false; }
+    });
+    statusControls.append(statusSelect);
+    card.append(details, statusControls, remove); list.append(card);
   });
 }
 
@@ -223,7 +247,7 @@ function setStatus(message, isError = false) {
 
 // Actualiza las listas con datos que vienen de MongoDB, pausando si se escribe una respuesta.
 async function refreshDashboard(force = false) {
-  if (!loggedIn || (!force && document.activeElement?.closest('.conversation-reply'))) return;
+  if (!loggedIn || (!force && document.activeElement?.closest('.conversation-reply,.order-status-controls'))) return;
   dashboardData = await adminApi('/api/admin/dashboard');
   renderAdminSummary(dashboardData);
   renderOrders(dashboardData.orders); renderConversations(dashboardData.conversations);
