@@ -40,9 +40,10 @@ function renderOrders(orders) {
     const details = makeElement('div');
     details.append(makeElement('h3', '', `${order.flavor} — ${order.name}`));
     details.append(makeElement('p', '', `Teléfono: ${order.phone}`));
+    if (order.quantity > 1) details.append(makeElement('p', 'order-current-status', `Cantidad: ${order.quantity} porciones · ${order.offerType === 'two_for_one' ? 'Promoción 2 x 1' : 'Oferta aplicada'}`));
     details.append(makeElement('p', '', order.basePrice == null ? 'Precio base: No especificado' : `${order.offerTitle ? 'Precio de oferta' : 'Precio base'}: $${Number(order.basePrice).toFixed(2)}`));
     if (order.offerTitle) details.append(makeElement('p', 'order-current-status', `Oferta aplicada: ${order.offerTitle} · Precio regular $${Number(order.regularPrice || 0).toFixed(2)}`));
-    if (order.toppings?.length) details.append(makeElement('p', '', `Toppings: ${order.toppings.join(', ')} ($${Number(order.toppingUnitPrice ?? 0.5).toFixed(2)} cada uno)`));
+    if (order.toppings?.length) details.append(makeElement('p', '', `Toppings por porción: ${order.toppings.join(', ')} ($${Number(order.toppingUnitPrice ?? 0.5).toFixed(2)} cada topping${order.quantity > 1 ? ` × ${order.quantity} porciones` : ''})`));
     details.append(makeElement('p', '', order.totalPrice == null ? 'Total: No especificado' : `Total del pedido: $${Number(order.totalPrice).toFixed(2)}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));
     details.append(makeElement('p', '', `Método de pago elegido: ${order.paymentMethod || 'No especificado'}`));
@@ -222,9 +223,13 @@ function renderOffers(offers) {
     }
     const details = makeElement('div');
     details.append(makeElement('h3', '', offer.title), makeElement('p', '', offer.description));
-    if (offer.product && Number.isFinite(offer.price))
-      details.append(makeElement('p', 'order-current-status', `${offer.product} · Oferta $${Number(offer.price).toFixed(2)} (regular $${offerProductPrices[offer.product]?.toFixed(2) || '—'})`));
+    if (offer.product && Number.isFinite(offer.price) && ['discount', 'two_for_one'].includes(offer.offerType))
+      details.append(makeElement('p', 'order-current-status', offer.offerType === 'two_for_one'
+        ? `2 x 1 · ${offer.product} · Dos por $${Number(offer.price).toFixed(2)}`
+        : `${offer.product} · Oferta $${Number(offer.price).toFixed(2)} (regular $${offerProductPrices[offer.product]?.toFixed(2) || '—'})`));
     else details.append(makeElement('p', 'order-meta', 'Esta promoción anterior no tiene un producto y precio canjeables. Retírala y publícala nuevamente para habilitar el canje.'));
+    if (offer.conditions) details.append(makeElement('p', '', `Condiciones: ${offer.conditions}`));
+    if (offer.expiresAt) details.append(makeElement('p', 'order-meta', `Válida hasta: ${new Date(offer.expiresAt).toLocaleDateString('es-PA')}`));
     details.append(makeElement('p', 'order-meta', `Publicada: ${new Date(offer.createdAt).toLocaleString('es-PA')}`));
     const remove = makeElement('button', 'delete-order', 'Retirar promoción');
     remove.type = 'button';
@@ -281,12 +286,38 @@ document.querySelector('#admin-logout').addEventListener('click', async () => {
 // Los botones de actualizar vuelven a consultar el tablero en Atlas.
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true).catch((error) => setStatus(error.message, true))));
 
-// Ajusta el límite del precio de oferta según el producto que eligió el administrador.
-document.querySelector('#offer-product')?.addEventListener('change', (event) => {
+// Configura el precio de una rebaja o fija el precio normal para la promoción 2 x 1.
+function updateOfferPriceControls() {
   const price = document.querySelector('#offer-price');
-  const regularPrice = offerProductPrices[event.currentTarget.value];
-  if (price) price.max = regularPrice ? (regularPrice - 0.01).toFixed(2) : '2.98';
-});
+  const product = document.querySelector('#offer-product')?.value;
+  const offerType = document.querySelector('#offer-type')?.value;
+  const regularPrice = offerProductPrices[product];
+  const label = document.querySelector('#offer-price-label');
+  const help = document.querySelector('#offer-price-help');
+  if (!price) return;
+  if (offerType === 'two_for_one') {
+    price.readOnly = true;
+    price.min = regularPrice ? regularPrice.toFixed(2) : '0.01';
+    price.max = regularPrice ? regularPrice.toFixed(2) : '4.99';
+    price.value = regularPrice ? regularPrice.toFixed(2) : '';
+    if (label) label.textContent = 'Precio que pagará por las dos porciones (USD)';
+    if (help) help.textContent = regularPrice
+      ? `El cliente recibe 2 porciones de ${product} y paga el precio regular de una. Los toppings se cobran por porción.`
+      : 'Selecciona un producto para fijar el precio de una porción.';
+    return;
+  }
+  price.readOnly = false;
+  price.min = '0.01';
+  price.max = regularPrice ? (regularPrice - 0.01).toFixed(2) : '2.98';
+  if (regularPrice && Number(price.value) >= regularPrice) price.value = '';
+  if (label) label.textContent = 'Precio promocional por porción (USD)';
+  if (help) help.textContent = regularPrice
+    ? `Debe ser menor que el precio regular de $${regularPrice.toFixed(2)}. Los toppings se cobran aparte.`
+    : 'El precio debe ser menor al precio regular del producto. Los toppings se cobran aparte.';
+}
+document.querySelector('#offer-product')?.addEventListener('change', updateOfferPriceControls);
+document.querySelector('#offer-type')?.addEventListener('change', updateOfferPriceControls);
+updateOfferPriceControls();
 
 // Reduce la imagen seleccionada en el navegador antes de enviarla a Atlas.
 async function compressOfferImage(file) {
@@ -385,9 +416,10 @@ document.querySelector('#offer-form')?.addEventListener('submit', async (event) 
     message.textContent = fields.image?.name ? 'Convirtiendo y optimizando la imagen…' : 'Publicando la promoción…';
     const imageData = await compressOfferImage(fields.image);
     const result = await adminApi('/api/admin/offers', { method: 'POST', body: JSON.stringify({ title: fields.title, description: fields.description,
-      product: fields.product, price: Number(fields.price), imageData }) });
+      conditions: fields.conditions, product: fields.product, offerType: fields.offerType, price: Number(fields.price), expiresAt: fields.expiresAt, imageData }) });
     message.textContent = `La promoción “${result.offer.title}” ya está publicada en la sección Promociones.`;
     form.reset();
+    document.querySelector('#offer-type')?.dispatchEvent(new Event('change'));
     document.querySelector('#offer-product')?.dispatchEvent(new Event('change'));
     const preview = document.querySelector('#offer-image-preview');
     preview.removeAttribute('src'); preview.hidden = true;

@@ -106,7 +106,8 @@ async function refreshOrderTracking() {
       const result = await apiRequest(`/api/orders/${encodeURIComponent(item.id)}/status`, {
         headers: { 'X-Order-Tracking-Token': item.token }
       });
-      title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()} · ${result.flavor}`;
+      const orderSummary = result.offerType === 'two_for_one' ? ' · Promoción 2 x 1, 2 porciones' : result.quantity > 1 ? ` · ${result.quantity} porciones` : '';
+      title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()} · ${result.flavor}${orderSummary}`;
       message.textContent = `Estado actual: ${ORDER_STEPS.find(([value]) => value === result.status)?.[1] || 'Recibido'}`;
       const steps = document.createElement('ol');
       steps.className = 'order-progress';
@@ -175,12 +176,20 @@ function setSelectedOffer(offer) {
   const offerId = document.querySelector('#order-offer-id');
   const panel = document.querySelector('#selected-offer');
   const note = document.querySelector('#selected-offer-message');
+  const toppingNote = document.querySelector('.price-note');
   if (offerId) offerId.value = offer?.id || '';
   if (panel) panel.hidden = !offer;
   if (note && offer) {
     const regularPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
-    note.textContent = `${offer.title}: ${offer.product} por $${Number(offer.price).toFixed(2)} (regular $${regularPrices[offer.product].toFixed(2)}). Los toppings se cobran aparte.`;
+    note.textContent = offer.offerType === 'two_for_one'
+      ? `${offer.title}: recibirás 2 porciones de ${offer.product} por $${Number(offer.price).toFixed(2)}. Los toppings se cobran por porción.`
+      : `${offer.title}: ${offer.product} por $${Number(offer.price).toFixed(2)} (regular $${regularPrices[offer.product].toFixed(2)}). Los toppings se cobran aparte.`;
+    if (offer.conditions) note.textContent += ` Condiciones: ${offer.conditions}`;
+    if (offer.expiresAt) note.textContent += ` Válida hasta ${new Date(offer.expiresAt).toLocaleDateString('es-PA')}.`;
   }
+  if (toppingNote) toppingNote.textContent = offer?.offerType === 'two_for_one'
+    ? 'Oferta 2 x 1: los toppings seleccionados se cobran por porción, $0.50 cada uno.'
+    : 'Precios en dólares (USD). Cada topping agrega $0.50 al total.';
   document.querySelectorAll('input[name="flavor"]').forEach((radio) => {
     radio.disabled = Boolean(offer && radio.value !== offer.product);
     if (offer && radio.value === offer.product) radio.checked = true;
@@ -204,7 +213,7 @@ async function loadSelectedOffer() {
   if (!offerId) return;
   if (!/^[a-f0-9]{24}$/i.test(offerId)) throw new Error('El enlace de la oferta no es válido. Elige otra desde Promociones.');
   const { offer } = await apiRequest(`/api/promotions/${encodeURIComponent(offerId)}`);
-  if (!offer || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(offer.product) || !Number.isFinite(offer.price))
+  if (!offer || !['La Clásica', 'La Crocantita', 'La Consentida'].includes(offer.product) || !['discount', 'two_for_one'].includes(offer.offerType) || !Number.isFinite(offer.price))
     throw new Error('Esta oferta ya no está disponible. Revisa las promociones vigentes.');
   setSelectedOffer(offer);
   document.querySelector('#selected-offer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -222,9 +231,12 @@ function updateOrderTotal() {
   const toppingCount = document.querySelectorAll('input[name="toppings"]:checked').length;
   const regularPrice = productPrices[selectedProduct];
   const basePrice = selectedOffer?.product === selectedProduct ? Number(selectedOffer.price) : regularPrice;
-  const orderTotal = Number((basePrice + toppingCount * 0.5).toFixed(2));
-  total.textContent = selectedOffer?.product === selectedProduct
-    ? `Oferta aplicada: producto $${basePrice.toFixed(2)} (antes $${regularPrice.toFixed(2)}). Total estimado: $${orderTotal.toFixed(2)} con ${toppingCount} topping(s).`
+  const quantity = selectedOffer?.product === selectedProduct && selectedOffer.offerType === 'two_for_one' ? 2 : 1;
+  const orderTotal = Number((basePrice + toppingCount * 0.5 * quantity).toFixed(2));
+  total.textContent = selectedOffer?.product === selectedProduct && selectedOffer.offerType === 'two_for_one'
+    ? `Oferta 2 x 1: ${quantity} porciones por $${basePrice.toFixed(2)}. Total estimado: $${orderTotal.toFixed(2)}${toppingCount ? ` con toppings para ${quantity} porciones` : ''}.`
+    : selectedOffer?.product === selectedProduct
+      ? `Oferta aplicada: producto $${basePrice.toFixed(2)} (antes $${regularPrice.toFixed(2)}). Total estimado: $${orderTotal.toFixed(2)} con ${toppingCount} topping(s).`
     : `Total estimado: $${orderTotal.toFixed(2)} (${toppingCount} topping(s) × $0.50).`;
 }
 document.querySelectorAll('input[name="flavor"],input[name="toppings"]').forEach((choice) => choice.addEventListener('change', updateOrderTotal));
@@ -377,15 +389,30 @@ async function loadPublicPromotions() {
       if (offer.product && Number.isFinite(offer.price) && offer.id) {
         const regularPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
         const product = document.createElement('p');
-        product.textContent = `Incluye ${offer.product}`;
+        product.textContent = offer.offerType === 'two_for_one' ? `Promoción 2 x 1 · ${offer.product}` : `Incluye ${offer.product}`;
         const price = document.createElement('p');
         price.className = 'promotion-price';
-        price.textContent = `Precio de oferta: $${Number(offer.price).toFixed(2)}${regularPrices[offer.product] ? ` · Regular $${regularPrices[offer.product].toFixed(2)}` : ''}`;
+        price.textContent = offer.offerType === 'two_for_one'
+          ? `Lleva 2 por $${Number(offer.price).toFixed(2)} (precio regular de una porción)`
+          : `Precio de oferta: $${Number(offer.price).toFixed(2)}${regularPrices[offer.product] ? ` · Regular $${regularPrices[offer.product].toFixed(2)}` : ''}`;
+        content.append(product, price);
+        if (offer.conditions) {
+          const conditions = document.createElement('p');
+          conditions.className = 'promotion-conditions';
+          conditions.textContent = offer.conditions;
+          content.append(conditions);
+        }
+        if (offer.expiresAt) {
+          const expiry = document.createElement('p');
+          expiry.className = 'promotion-expiry';
+          expiry.textContent = `Válida hasta ${new Date(offer.expiresAt).toLocaleDateString('es-PA')}`;
+          content.append(expiry);
+        }
         const redeem = document.createElement('a');
         redeem.className = 'button button-dark promotion-redeem';
         redeem.href = `pedido.html?oferta=${encodeURIComponent(offer.id)}`;
         redeem.textContent = 'Canjear oferta';
-        content.append(product, price, redeem);
+        content.append(redeem);
       }
       card.append(content);
       list.append(card);
