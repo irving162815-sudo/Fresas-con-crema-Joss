@@ -67,6 +67,7 @@ const Report = mongoose.model('Report', reportSchema);
 const messageSchema = new mongoose.Schema({
   role: { type: String, enum: ['customer', 'assistant', 'human'], required: true },
   text: { type: String, required: true, maxlength: 1200 },
+  link: { type: String, enum: ['', 'menu.html', 'pedido.html', 'promociones.html', 'redes.html', 'sobre-nosotros.html', 'registro.html', 'iniciar-sesion.html', 'reportar.html'], default: '' },
   createdAt: { type: Date, default: Date.now }
 }, { _id: false });
 const conversationSchema = new mongoose.Schema({
@@ -170,7 +171,7 @@ function answerBusinessQuestion(question) {
   const normalized = question.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const includesAny = (...terms) => terms.some((term) => normalized.includes(term));
   const choose = (answers) => answers[crypto.randomInt(answers.length)];
-  const response = (answers) => ({ reply: choose(answers), handoff: false });
+  const response = (answers, link = '') => ({ reply: choose(answers), handoff: false, link });
 
   if (includesAny('asesor', 'persona real', 'humano', 'administrador', 'administradores', 'alguien del equipo', 'hablar con alguien', 'hablar con una persona', 'persona del equipo'))
     return { reply: '¡Claro! Ya envié tu consulta a nuestro equipo. Una persona te responderá por este chat cuando esté disponible.', handoff: true };
@@ -181,36 +182,69 @@ function answerBusinessQuestion(question) {
   if (includesAny('adios', 'hasta luego', 'chao', 'bye'))
     return response(['¡Hasta pronto! Que tengas un día delicioso 🍓', '¡Gracias por visitar Jossy’s Berry PTY! Aquí estaremos cuando se te antojen fresas con crema.', '¡Nos vemos! Puedes volver a escribirnos cuando quieras.']);
 
+  if (includesAny('que puedes hacer', 'que te puedo preguntar', 'que sabes', 'necesito ayuda', 'como me ayudas', 'opciones tienes'))
+    return response(['Puedo orientarte sobre sabores y precios, toppings, pedidos, pagos, horario, entregas, promociones, registro y contacto. Si no tengo el dato, se lo paso al equipo.', 'Pregúntame sobre el menú, cómo pedir, Yappy, efectivo, horarios o nuestras redes. Para algo especial, te conecto con el equipo.', 'Te ayudo a encontrar secciones del sitio y contestar dudas comunes. También puedo enviar preguntas que no conozca al personal.']);
+
+  if (includesAny('quienes son', 'quien es jossy', 'sobre ustedes', 'sobre nosotros', 'su historia', 'que hacen', 'emprendimiento'))
+    return response(['Somos Jossy’s Berry PTY, un emprendimiento dedicado a preparar fresas con crema frescas y deliciosas, con buena atención y precios accesibles.', 'En Jossy’s Berry PTY preparamos fresas con crema con fruta fresca y cuidamos la presentación, la higiene y la atención a cada cliente.', 'Nuestro emprendimiento ofrece fresas con crema para disfrutar en cualquier ocasión. Nos importa la frescura, el buen servicio y una experiencia rica y accesible.'], 'sobre-nosotros.html');
+
   if (includesAny('oreo', 'galleta', 'galletas', 'topping', 'toppings', 'chispita', 'chispitas', 'extra de crema', 'extra de fresa', 'extra de fresas'))
-    return response(['Puedes agregar Extra de crema, Chispitas de chocolate, Chispitas de colores, Galletas Oreo o Extra de fresas. Cada topping cuesta $0.50.', '¡Personaliza tu postre! Tenemos cinco toppings: crema extra, chispitas de chocolate o colores, Oreo y fresas extra. Cada uno vale $0.50.', 'Los toppings disponibles cuestan $0.50 cada uno: crema extra, chispitas de chocolate, chispitas de colores, Oreo y fresas extra.']);
+    return response(['Puedes agregar Extra de crema, Chispitas de chocolate, Chispitas de colores, Galletas Oreo o Extra de fresas. Cada topping cuesta $0.50.', '¡Personaliza tu postre! Tenemos cinco toppings: crema extra, chispitas de chocolate o colores, Oreo y fresas extra. Cada uno vale $0.50.', 'Los toppings disponibles cuestan $0.50 cada uno: crema extra, chispitas de chocolate, chispitas de colores, Oreo y fresas extra.'], 'menu.html');
+
+  if (includesAny('personalizar', 'combinacion', 'combinación', 'escoger extras', 'agregar extras'))
+    return response(['Sí, puedes escoger tus toppings al hacer el pedido. Cada extra cuesta $0.50.', 'Puedes personalizar tu postre con los toppings del menú y elegirlos en el formulario de Pedidos.', '¡Claro! Selecciona los extras que quieras en el formulario de pedido; cada topping tiene un costo de $0.50.'], 'pedido.html');
+
+  if (includesAny('imagen', 'imagenes', 'foto', 'fotos', 'ilustrativa'))
+    return response(['Las imágenes del menú son ilustrativas y ayudan a mostrar nuestros productos. Puedes ver los sabores disponibles en Menú.', 'Las fotos son ilustrativas; la presentación puede variar. Revisa los productos en la sección Menú.'], 'menu.html');
 
   if (includesAny('precio', 'precios', 'cuanto cuesta', 'cuanto vale', 'cuestan', 'costo', 'menu', 'menú', 'clasica', 'crocantita', 'consentida', 'producto', 'productos', 'sabores', 'sabor')) {
-    if (includesAny('clasica')) return response(['La Clásica cuesta $2.99. Puedes añadir los toppings que quieras por $0.50 cada uno.', 'La Clásica vale $2.99 antes de toppings. Cada extra cuesta $0.50.', 'Nuestro sabor La Clásica cuesta $2.99. ¿Quieres que te cuente sobre los otros sabores?']);
-    if (includesAny('crocantita')) return response(['La Crocantita cuesta $3.99 y puedes personalizarla con toppings a $0.50 cada uno.', 'La Crocantita vale $3.99 antes de agregar toppings.', 'La Crocantita tiene un precio base de $3.99. Cada topping adicional cuesta $0.50.']);
-    if (includesAny('consentida')) return response(['La Consentida cuesta $4.99 antes de toppings. Cada extra cuesta $0.50.', 'La Consentida vale $4.99 y puedes elegir toppings por $0.50 cada uno.', 'Nuestro sabor La Consentida cuesta $4.99.']);
-    return response(['Tenemos tres opciones: La Clásica $2.99, La Crocantita $3.99 y La Consentida $4.99. Cada topping adicional cuesta $0.50.', 'El menú empieza en $2.99: La Clásica $2.99, La Crocantita $3.99 y La Consentida $4.99. Los toppings cuestan $0.50 cada uno.', 'Puedes escoger La Clásica ($2.99), La Crocantita ($3.99) o La Consentida ($4.99), y agregar toppings por $0.50 cada uno.']);
+    if (includesAny('clasica')) return response(['La Clásica cuesta $2.99. Puedes añadir los toppings que quieras por $0.50 cada uno.', 'La Clásica vale $2.99 antes de toppings. Cada extra cuesta $0.50.', 'Nuestro sabor La Clásica cuesta $2.99. ¿Quieres que te cuente sobre los otros sabores?'], 'menu.html');
+    if (includesAny('crocantita')) return response(['La Crocantita cuesta $3.99 y puedes personalizarla con toppings a $0.50 cada uno.', 'La Crocantita vale $3.99 antes de agregar toppings.', 'La Crocantita tiene un precio base de $3.99. Cada topping adicional cuesta $0.50.'], 'menu.html');
+    if (includesAny('consentida')) return response(['La Consentida cuesta $4.99 antes de toppings. Cada extra cuesta $0.50.', 'La Consentida vale $4.99 y puedes elegir toppings por $0.50 cada uno.', 'Nuestro sabor La Consentida cuesta $4.99.'], 'menu.html');
+    return response(['Tenemos tres opciones: La Clásica $2.99, La Crocantita $3.99 y La Consentida $4.99. Cada topping adicional cuesta $0.50.', 'El menú empieza en $2.99: La Clásica $2.99, La Crocantita $3.99 y La Consentida $4.99. Los toppings cuestan $0.50 cada uno.', 'Puedes escoger La Clásica ($2.99), La Crocantita ($3.99) o La Consentida ($4.99), y agregar toppings por $0.50 cada uno.'], 'menu.html');
   }
 
   if (includesAny('yappy', 'efectivo', 'visa', 'tarjeta', 'pago', 'pagar', 'transferencia'))
-    return response(['Aceptamos efectivo al recibir o Yappy al 6434-7297 después de confirmar el pedido. Para pagar con Visa, coordina con el equipo; el sitio no procesa tarjetas.', 'Puedes pagar en efectivo al recibir o por Yappy al 6434-7297 una vez confirmado. Si prefieres Visa, te ayudamos a coordinarlo con una persona.', 'Para pagar tienes efectivo al recibir y Yappy al 6434-7297 después de confirmar. Las tarjetas Visa se coordinan con el equipo y no se ingresan en esta página.']);
+    return response(['Aceptamos efectivo al recibir o Yappy al 6434-7297 después de confirmar el pedido. Para pagar con Visa, coordina con el equipo; el sitio no procesa tarjetas.', 'Puedes pagar en efectivo al recibir o por Yappy al 6434-7297 una vez confirmado. Si prefieres Visa, te ayudamos a coordinarlo con una persona.', 'Para pagar tienes efectivo al recibir y Yappy al 6434-7297 después de confirmar. Las tarjetas Visa se coordinan con el equipo y no se ingresan en esta página.'], 'pedido.html');
+
+  if (includesAny('gratis', 'gratuita', 'costo de envio', 'costo de entrega', 'cuanto cuesta el envio', 'cuanto cuesta la entrega', 'cuanto cuesta el delivery', 'precio de la entrega', 'cuanto cuesta el domicilio', 'cuanto cobran por entregar', 'tamaño', 'tamano', 'porciones', 'porcion'))
+    return { reply: 'No tengo ese costo o tamaño confirmado. Ya pasé tu pregunta al equipo para que te dé la información correcta.', handoff: true, link: 'redes.html' };
 
   if (includesAny('entrega', 'delivery', 'domicilio', 'direccion', 'dirección', 'ubicacion', 'ubicación', 'gps', 'mapa', 'recoger', 'envio', 'envío'))
-    return response(['En la página Pedidos puedes escribir tu dirección o compartir tu ubicación GPS para indicar dónde entregar. El equipo confirmará los detalles del pedido.', 'Para indicar la entrega, abre Pedidos y escribe tu dirección o usa el botón de ubicación GPS. Si tienes dudas sobre cobertura, te paso con el equipo.', 'Puedes enviar tu pedido desde la sección Pedidos e incluir una dirección escrita o tu ubicación del GPS.']);
+    return response(['En la página Pedidos puedes escribir tu dirección o compartir tu ubicación GPS para indicar dónde entregar. El equipo confirmará los detalles del pedido.', 'Para indicar la entrega, abre Pedidos y escribe tu dirección o usa el botón de ubicación GPS. Si tienes dudas sobre cobertura, te paso con el equipo.', 'Puedes enviar tu pedido desde la sección Pedidos e incluir una dirección escrita o tu ubicación del GPS.'], 'pedido.html');
 
   if (includesAny('pedido', 'ordenar', 'comprar', 'quiero una', 'quiero pedir', 'hacer un pedido', 'como pido', 'cómo pido'))
-    return response(['¡Qué rico! Entra a la sección Pedidos, elige tu sabor y toppings, completa tus datos y selecciona cómo pagar.', 'Puedes pedir desde la pestaña Pedidos: selecciona el producto, personalízalo y completa la información de entrega.', 'Para comprar, abre Pedidos en el menú. Allí escoges sabor, toppings, método de pago y dirección.']);
+    return response(['¡Qué rico! Entra a la sección Pedidos, elige tu sabor y toppings, completa tus datos y selecciona cómo pagar.', 'Puedes pedir desde la pestaña Pedidos: selecciona el producto, personalízalo y completa la información de entrega.', 'Para comprar, abre Pedidos en el menú. Allí escoges sabor, toppings, método de pago y dirección.'], 'pedido.html');
 
-  if (includesAny('instagram', 'instagran', 'redes sociales', 'whatsapp', 'wsp', 'contacto', 'telefono', 'teléfono', 'numero', 'número'))
-    return response(['Estamos en Instagram como Fresamania: instagram.com/fresa_mania01. También puedes escribirnos por WhatsApp al 6434-7297 o 6626-0366.', 'Encuéntranos en Instagram como Fresamania y contáctanos por WhatsApp: 6434-7297 o 6626-0366.', 'Para contactarnos, escríbenos al WhatsApp 6434-7297 o 6626-0366. En Instagram estamos como Fresamania.']);
+  if (includesAny('instagram', 'instagran', 'insta', 'redes sociales', 'whatsapp', 'wsp', 'contacto', 'contactar', 'contactarnos', 'contacto al equipo', 'telefono', 'teléfono', 'numero', 'número'))
+    return response(['Estamos en Instagram como Fresamania: instagram.com/fresa_mania01. También puedes escribirnos por WhatsApp al 6434-7297 o 6626-0366.', 'Encuéntranos en Instagram como Fresamania y contáctanos por WhatsApp: 6434-7297 o 6626-0366.', 'Para contactarnos, escríbenos al WhatsApp 6434-7297 o 6626-0366. En Instagram estamos como Fresamania.'], 'redes.html');
 
   if (includesAny('promocion', 'promoción', 'promociones', 'oferta', 'ofertas', 'descuento', 'descuentos'))
-    return response(['Las promociones vigentes aparecen en la sección Promociones de la página. Si quieres confirmar una oferta específica, puedo pasar tu consulta al equipo.', 'Revisa la pestaña Promociones para ver las ofertas publicadas. No quiero inventarte una promoción que ya haya terminado.', 'Puedes consultar las promociones actuales en la sección Promociones.']);
+    return response(['Las promociones vigentes aparecen en la sección Promociones de la página. Si quieres confirmar una oferta específica, puedo pasar tu consulta al equipo.', 'Revisa la pestaña Promociones para ver las ofertas publicadas. No quiero inventarte una promoción que ya haya terminado.', 'Puedes consultar las promociones actuales en la sección Promociones.'], 'promociones.html');
 
   if (includesAny('ingrediente', 'ingredientes', 'alergia', 'alergico', 'alérgico', 'intolerancia', 'higiene', 'fresca', 'frescas', 'conservacion', 'conservación', 'vegetariano', 'vegano'))
     return { reply: 'Para confirmar ingredientes, alérgenos o condiciones de conservación con precisión, prefiero que te responda una persona del equipo. Ya envié tu consulta a Admin.', handoff: true };
 
-  if (includesAny('horario', 'abierto', 'abren', 'cierran', 'disponibilidad', 'hoy', 'zona', 'cobertura', 'cuanto demora', 'cuánto demora', 'tiempo de entrega', 'fecha'))
+  if (includesAny('feriado', 'festivo', 'dia festivo', 'días festivos'))
+    return { reply: 'Nuestro horario habitual es de lunes a domingo, de 10:00 a. m. a 6:00 p. m. Para confirmar atención en un feriado específico, ya pasé tu consulta al equipo.', handoff: true, link: 'redes.html' };
+
+  if (includesAny('que dias', 'domingo', 'sabado', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'todos los dias', 'fin de semana', 'fines de semana', 'hoy', 'mañana', 'manana'))
+    return response(['Atendemos de lunes a domingo, de 10:00 a. m. a 6:00 p. m. 🍓', '¡Estamos para atenderte todos los días! Nuestro horario es de 10:00 AM a 6:00 PM.', 'Abrimos de lunes a domingo, de 10:00 a. m. a 6:00 p. m. Puedes consultar nuestras redes para contactarnos.'], 'redes.html');
+
+  if (includesAny('horario', 'hora', 'abierto', 'abren', 'cierran', 'atienden', 'atencion', 'atención'))
+    return response(['Nuestro horario es de lunes a domingo, de 10:00 a. m. a 6:00 p. m. ¡Con gusto te atendemos!', 'Atendemos todos los días de 10:00 AM a 6:00 PM.', 'Jossy’s Berry PTY atiende de lunes a domingo, de 10:00 a. m. a 6:00 p. m.'], 'redes.html');
+
+  if (includesAny('disponibilidad', 'hoy', 'zona', 'cobertura', 'cuanto demora', 'cuánto demora', 'tiempo de entrega', 'fecha'))
     return { reply: 'No tengo ese dato confirmado y no quiero darte información incorrecta. Ya envié tu pregunta a nuestro equipo para que te ayude por aquí.', handoff: true };
+
+  if (includesAny('iniciar sesion', 'iniciar sesión', 'entrar a mi cuenta', 'ingresar a mi cuenta'))
+    return response(['Inicia sesión con el correo y la contraseña que usaste al registrarte.', 'La opción Iniciar sesión está en la navegación del sitio; entra con tu correo y contraseña.', 'Para entrar a tu cuenta, abre Iniciar sesión desde el encabezado.'], 'iniciar-sesion.html');
+
+  if (includesAny('registrar', 'registro', 'crear cuenta', 'cliente fiel', 'beneficios', 'beneficio'))
+    return response(['Puedes crear tu cuenta desde Registrarse y luego iniciar sesión con tu correo y contraseña.', 'En el menú encontrarás Registrarse para crear tu cuenta de cliente fiel.', 'Para unirte como cliente fiel, abre Registrarse y completa tus datos.'], 'registro.html');
+
+  if (includesAny('falla', 'error', 'problema en la pagina', 'reportar', 'no funciona'))
+    return response(['Puedes reportar el problema en la sección Reportar una falla. El equipo revisará los detalles.', 'Abre Reportar una falla y cuéntanos qué ocurrió para que podamos revisarlo.', 'Para avisarnos de un error del sitio, utiliza el formulario Reportar una falla.'], 'reportar.html');
 
   return { reply: 'No tengo una respuesta confirmada para esa consulta. Ya la envié al equipo de Jossy’s Berry PTY y una persona podrá responderte por este chat. 🍓', handoff: true };
 }
@@ -339,7 +373,7 @@ app.post('/api/chats/:key/messages', chatMessageLimiter, async (request, respons
   const answer = conversation.handoff
     ? { reply: 'Tu consulta ya está en la bandeja del equipo. Una persona te responderá por aquí.', handoff: true }
     : answerBusinessQuestion(message);
-  conversation.messages.push({ role: 'assistant', text: answer.reply });
+  conversation.messages.push({ role: 'assistant', text: answer.reply, link: answer.link || '' });
   conversation.handoff = conversation.handoff || answer.handoff;
   // Un nuevo mensaje del cliente vuelve a poner el chat en espera, aunque ya se hubiera respondido antes.
   if (conversation.handoff) conversation.status = 'waiting';

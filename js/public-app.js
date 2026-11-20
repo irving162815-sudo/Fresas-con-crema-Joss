@@ -1,6 +1,12 @@
 // Formularios públicos: envían los datos al servidor para guardarlos en MongoDB Atlas.
 // Guarda en el navegador la llave aleatoria que identifica la conversación del chat.
 const CHAT_ID_KEY = 'jossysBerryChatId';
+// Lista segura de páginas a las que el chatbot puede dirigir a los visitantes.
+const chatPageLinks = new Map([
+  ['menu.html', 'Abrir el menú'], ['pedido.html', 'Ir a Pedidos'], ['promociones.html', 'Ver promociones'],
+  ['redes.html', 'Ver contacto y redes'], ['sobre-nosotros.html', 'Conocer el emprendimiento'],
+  ['registro.html', 'Crear cuenta de cliente fiel'], ['iniciar-sesion.html', 'Iniciar sesión'], ['reportar.html', 'Reportar una falla']
+]);
 
 // Preguntas de ejemplo: cada vez que se abre o responde el chat se muestran algunas al azar.
 const suggestedQuestions = [
@@ -10,7 +16,11 @@ const suggestedQuestions = [
   '¿Cómo comparto mi ubicación?', '¿Dónde escribo mi dirección?', '¿Cuáles son sus WhatsApp?',
   '¿Cuál es su Instagram?', '¿Dónde veo las promociones?', 'Quiero hablar con una persona',
   '¿Qué incluye La Crocantita?', '¿Cuánto cuesta La Consentida?', '¿Cómo personalizo mi pedido?',
-  '¿Hacen entregas?', '¿Tienen opciones para alergias?', '¿A qué hora atienden?'
+  '¿Hacen entregas?', '¿Tienen opciones para alergias?', '¿A qué hora atienden?',
+  '¿Qué días atienden?', '¿Quiénes son Jossy’s Berry?', '¿Las imágenes son ilustrativas?',
+  '¿Cómo creo una cuenta?', '¿Cómo reporto un error?', '¿Puedo escoger mis toppings?',
+  '¿Cuánto cuesta La Crocantita?', '¿Dónde puedo ver los productos?', '¿Me ayudan con mi pedido?',
+  '¿Cuánto cuesta la entrega?', '¿Puedo pagar en efectivo?', '¿Cómo contacto al equipo?'
 ];
 
 // Elige tres preguntas sin repetirlas y crea sus botones de forma segura.
@@ -271,6 +281,14 @@ function renderChat(conversation) {
     const bubble = document.createElement('p');
     bubble.className = message.role === 'customer' ? 'user-message' : message.role === 'human' ? 'human-message' : 'bot-message';
     bubble.textContent = message.text;
+    // Solo se crean enlaces a las páginas aprobadas de la lista interna.
+    if (chatPageLinks.has(message.link)) {
+      const pageLink = document.createElement('a');
+      pageLink.className = 'chat-page-link';
+      pageLink.href = message.link;
+      pageLink.textContent = chatPageLinks.get(message.link);
+      bubble.append(document.createElement('br'), pageLink);
+    }
     messages.append(bubble);
   });
   if (conversation.handoff) {

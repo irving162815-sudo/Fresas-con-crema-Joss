@@ -978,6 +978,18 @@ max-width:88%;
 align-self:flex-start;
   background:#f4e5dd
 }
+.chat-page-link {
+  display:inline-block;
+  margin-top:7px;
+  color:var(--berry);
+  font-weight:700;
+  text-decoration:underline;
+  text-underline-offset:2px
+}
+.chat-page-link:hover {
+  color:#805300;
+  background:var(--yellow)
+}
 .user-message {
 align-self:flex-end;
   background:#f7e5a2
