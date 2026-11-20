@@ -2,6 +2,37 @@
 // Guarda en el navegador la llave aleatoria que identifica la conversación del chat.
 const CHAT_ID_KEY = 'jossysBerryChatId';
 
+// Preguntas de ejemplo: cada vez que se abre o responde el chat se muestran algunas al azar.
+const suggestedQuestions = [
+  '¿Qué sabores tienen?', '¿Cuánto cuesta La Clásica?', '¿Qué toppings puedo agregar?',
+  '¿Cuánto cuesta cada topping?', '¿Cómo hago un pedido?', '¿Puedo pagar con Yappy?',
+  '¿Cuál es el número de Yappy?', '¿Aceptan efectivo?', '¿Puedo pagar con Visa?',
+  '¿Cómo comparto mi ubicación?', '¿Dónde escribo mi dirección?', '¿Cuáles son sus WhatsApp?',
+  '¿Cuál es su Instagram?', '¿Dónde veo las promociones?', 'Quiero hablar con una persona',
+  '¿Qué incluye La Crocantita?', '¿Cuánto cuesta La Consentida?', '¿Cómo personalizo mi pedido?',
+  '¿Hacen entregas?', '¿Tienen opciones para alergias?', '¿A qué hora atienden?'
+];
+
+// Elige tres preguntas sin repetirlas y crea sus botones de forma segura.
+function showRandomChatSuggestions() {
+  const area = document.querySelector('#assistant-suggestions');
+  if (!area) return;
+  const pool = [...suggestedQuestions];
+  for (let index = pool.length - 1; index > 0; index--) {
+    const swapWith = Math.floor(Math.random() * (index + 1));
+    [pool[index], pool[swapWith]] = [pool[swapWith], pool[index]];
+  }
+  area.replaceChildren();
+  pool.slice(0, 3).forEach((prompt) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.prompt = prompt;
+    button.textContent = prompt;
+    button.addEventListener('click', () => sendChatMessage(prompt));
+    area.append(button);
+  });
+}
+
 // Envía JSON al servidor y enseña mensajes claros si la API responde con un error.
 async function apiRequest(url, options = {}) {
   const response = await fetch(url, {
@@ -227,7 +258,7 @@ function renderChat(conversation) {
   messages.replaceChildren();
   const privacy = document.createElement('p');
   privacy.className = 'assistant-privacy';
-  privacy.textContent = 'Tus mensajes se envían a Gemini y se guardan en la bandeja del equipo para atenderte. Usa “Finalizar y borrar” para eliminarlos de este sitio. No compartas contraseñas ni datos de tarjetas.';
+  privacy.textContent = 'Chat automático: las preguntas reconocidas reciben respuestas predefinidas. Las demás se guardan en la bandeja Admin para que te responda el equipo. Finaliza y borra el chat al terminar.';
   messages.append(privacy);
   if (!conversation) {
     const welcome = document.createElement('p');
@@ -277,7 +308,7 @@ async function loadChat() {
   renderChat(result.conversation);
 }
 
-// Envía la pregunta al servidor; este la guarda y consulta Gemini o deriva al equipo.
+// Envía la pregunta al servidor; allí se contesta con reglas locales o se deriva al equipo.
 async function sendChatMessage(text) {
   const message = text.trim();
   if (!message) return;
@@ -288,6 +319,7 @@ async function sendChatMessage(text) {
       method: 'POST', body: JSON.stringify({ message })
     });
     renderChat(result.conversation);
+    showRandomChatSuggestions();
   } catch (error) {
     const messages = document.querySelector('#assistant-messages');
     if (messages) {
@@ -311,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.hidden = !panel.hidden;
     if (!panel.hidden) {
       loadChat().catch(() => {});
+      showRandomChatSuggestions();
       input.focus();
       pollTimer = window.setInterval(() => loadChat().catch(() => {}), 6000);
     } else window.clearInterval(pollTimer);
@@ -322,5 +355,5 @@ document.addEventListener('DOMContentLoaded', () => {
     input.value = '';
     sendChatMessage(text);
   });
-  document.querySelectorAll('[data-prompt]').forEach((button) => button.addEventListener('click', () => sendChatMessage(button.dataset.prompt)));
+  showRandomChatSuggestions();
 });

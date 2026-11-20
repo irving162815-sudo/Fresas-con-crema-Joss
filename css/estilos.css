@@ -984,6 +984,7 @@ align-self:flex-end;
 }
 .quick-questions {
 display:flex;
+  flex-wrap:wrap;
   gap:6px;
   padding:0 10px 9px
 }

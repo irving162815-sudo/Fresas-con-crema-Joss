@@ -248,18 +248,6 @@ document.querySelector('#admin-logout').addEventListener('click', async () => {
   loggedIn = false; dashboard.hidden = true; loginForm.hidden = false; loginForm.reset();
 });
 
-// Comprueba la clave y modelo configurados en Render sin almacenar la pregunta de prueba.
-document.querySelector('#gemini-check')?.addEventListener('click', async (event) => {
-  const button = event.currentTarget;
-  button.disabled = true;
-  setStatus('Probando conexión con Gemini…');
-  try {
-    const result = await adminApi('/api/admin/gemini-check', { method: 'POST' });
-    setStatus(`Gemini funciona (${result.model}): ${result.reply}`);
-  } catch (error) { setStatus(error.message, true); }
-  finally { button.disabled = false; }
-});
-
 // Los botones de actualizar vuelven a consultar el tablero en Atlas.
 document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', () => refreshDashboard(true).catch((error) => setStatus(error.message, true))));
 
