@@ -78,6 +78,8 @@ const conversationSchema = new mongoose.Schema({
   messages: { type: [messageSchema], default: [] },
   updatedAt: { type: Date, default: Date.now }
 });
+// Limpia chats abandonados después de 30 días como límite adicional de retención.
+conversationSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 const Conversation = mongoose.model('Conversation', conversationSchema);
 
 // Campañas: guarda borradores y cuántos clientes autorizaron recibir promociones.
@@ -120,6 +122,8 @@ app.use((request, response, next) => {
   parser(request, response, next);
 });
 app.use((request, _response, next) => { if (!request.body) request.body = {}; next(); });
+// Evita que navegadores o intermediarios guarden respuestas con chats y datos privados.
+app.use('/api', (_request, response, next) => { response.set('Cache-Control', 'no-store, private'); next(); });
 
 // Conserva las sesiones del navegador en Atlas y marca la cookie como privada.
 app.use(session({
@@ -190,7 +194,14 @@ async function generateGeminiReply(messages) {
     }),
     signal: AbortSignal.timeout(20000)
   });
-  if (!response.ok) throw new Error(`Gemini respondió con estado ${response.status}.`);
+  if (!response.ok) {
+    // Lee el error de Google para diagnosticar modelo, permisos o cuota sin registrar la clave.
+    const detail = await response.json().catch(() => ({}));
+    const googleMessage = text(detail.error?.message || '', 300);
+    const error = new Error(`Gemini HTTP ${response.status}${googleMessage ? `: ${googleMessage}` : ''}`);
+    error.status = response.status;
+    throw error;
+  }
   const result = await response.json();
   const output = result.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
   if (!output) throw new Error('Gemini no devolvió texto.');
@@ -306,6 +317,13 @@ app.get('/api/chats/:key', chatReadLimiter, async (request, response) => {
   return response.json({ conversation });
 });
 
+// Borra permanentemente de Atlas el chat que el cliente decide finalizar.
+app.delete('/api/chats/:key', chatReadLimiter, async (request, response) => {
+  if (!/^[a-f0-9-]{30,40}$/i.test(request.params.key)) return response.status(400).json({ message: 'Identificador de chat inválido.' });
+  await Conversation.deleteOne({ key: request.params.key });
+  return response.json({ ok: true });
+});
+
 // Guarda el mensaje del cliente y la respuesta del bot en Atlas; deriva dudas al equipo.
 app.post('/api/chats/:key/messages', chatMessageLimiter, async (request, response) => {
   if (!/^[a-f0-9-]{30,40}$/i.test(request.params.key)) return response.status(400).json({ message: 'Identificador de chat inválido.' });
@@ -321,10 +339,10 @@ app.post('/api/chats/:key/messages', chatMessageLimiter, async (request, respons
     try {
       answer = await generateGeminiReply(conversation.messages);
     } catch (error) {
-      console.warn(`Gemini no pudo responder (${error.name || 'Error'}).`);
+      console.error(`Gemini no pudo responder con ${geminiModel}: ${text(error.message || error.name || 'Error desconocido', 350)}`);
       answer = {
         reply: geminiApiKey
-          ? 'No pude responderte en este momento. Ya dejé tu consulta al equipo para que una persona te ayude por aquí.'
+          ? 'No pude conectar con el asistente ahora mismo. Dejé tu consulta al equipo para que una persona te ayude por aquí.'
           : 'El asistente inteligente aún se está configurando. Ya dejé tu consulta al equipo para que una persona te ayude por aquí.',
         handoff: true
       };
@@ -353,6 +371,17 @@ app.post('/api/admin/login', authLimiter, async (request, response) => {
 
 // Permite que el panel reconozca una sesión de administrador después de recargar.
 app.get('/api/admin/session', requireAdmin, (_request, response) => response.json({ ok: true }));
+
+// Prueba la conexión a Gemini desde el panel sin guardar el mensaje de diagnóstico.
+app.post('/api/admin/gemini-check', requireAdmin, async (_request, response) => {
+  try {
+    const result = await generateGeminiReply([{ role: 'customer', text: 'Saluda brevemente en español.' }]);
+    return response.json({ ok: true, model: geminiModel, reply: result.reply });
+  } catch (error) {
+    console.error(`Prueba de Gemini fallida con ${geminiModel}: ${text(error.message || 'Error desconocido', 350)}`);
+    return response.status(502).json({ message: `Gemini no respondió (${text(error.message || 'error desconocido', 350)}). Revisa GEMINI_API_KEY y GEMINI_MODEL en Render.` });
+  }
+});
 
 app.post('/api/admin/logout', requireAdmin, (request, response) => {
   request.session.isAdmin = false;
@@ -405,6 +434,13 @@ app.post('/api/admin/chats/:id/reply', requireAdmin, async (request, response) =
 app.post('/api/admin/chats/:id/close', requireAdmin, async (request, response) => {
   const conversation = await Conversation.findByIdAndUpdate(request.params.id, { status: 'closed', updatedAt: new Date() });
   return conversation ? response.json({ ok: true }) : response.status(404).json({ message: 'No encontramos esa conversación.' });
+});
+
+// Permite al equipo borrar el chat de Atlas cuando ya no hace falta conservarlo.
+app.delete('/api/admin/chats/:id', requireAdmin, async (request, response) => {
+  if (!validObjectId(request.params.id)) return response.status(400).json({ message: 'Identificador de conversación inválido.' });
+  await Conversation.findByIdAndDelete(request.params.id);
+  return response.json({ ok: true });
 });
 
 app.delete('/api/admin/orders/:id', requireAdmin, async (request, response) => {

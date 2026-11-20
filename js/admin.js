@@ -90,13 +90,19 @@ function renderConversations(conversations) {
           await refreshDashboard(true);
         } catch (error) { setStatus(error.message, true); send.disabled = false; }
       });
-      const close = makeElement('button', 'button button-outline', 'Cerrar conversación'); close.type = 'button';
-      close.addEventListener('click', async () => {
-        try { await adminApi(`/api/admin/chats/${conversation._id}/close`, { method: 'POST' }); await refreshDashboard(true); }
-        catch (error) { setStatus(error.message, true); }
-      });
-      card.append(replyForm, close);
+      card.append(replyForm);
     }
+    // Finalizar la atención elimina todo el registro de Atlas, incluidos los mensajes.
+    const erase = makeElement('button', 'button button-outline', 'Finalizar y borrar chat'); erase.type = 'button';
+    erase.addEventListener('click', async () => {
+      if (!window.confirm('¿Finalizar y borrar permanentemente este chat y todos sus mensajes?')) return;
+      erase.disabled = true;
+      try {
+        await adminApi(`/api/admin/chats/${conversation._id}`, { method: 'DELETE' });
+        await refreshDashboard(true);
+      } catch (error) { setStatus(error.message, true); erase.disabled = false; }
+    });
+    card.append(erase);
     list.append(card);
   });
 }
@@ -240,6 +246,18 @@ loginForm.addEventListener('submit', async (event) => {
 document.querySelector('#admin-logout').addEventListener('click', async () => {
   try { await adminApi('/api/admin/logout', { method: 'POST' }); } catch {}
   loggedIn = false; dashboard.hidden = true; loginForm.hidden = false; loginForm.reset();
+});
+
+// Comprueba la clave y modelo configurados en Render sin almacenar la pregunta de prueba.
+document.querySelector('#gemini-check')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  setStatus('Probando conexión con Gemini…');
+  try {
+    const result = await adminApi('/api/admin/gemini-check', { method: 'POST' });
+    setStatus(`Gemini funciona (${result.model}): ${result.reply}`);
+  } catch (error) { setStatus(error.message, true); }
+  finally { button.disabled = false; }
 });
 
 // Los botones de actualizar vuelven a consultar el tablero en Atlas.

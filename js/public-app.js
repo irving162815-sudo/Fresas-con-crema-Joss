@@ -223,12 +223,19 @@ function getChatKey() {
 // Actualiza la conversación y agrega los mensajes de forma segura como texto.
 function renderChat(conversation) {
   const messages = document.querySelector('#assistant-messages');
-  if (!messages || !conversation) return;
+  if (!messages) return;
   messages.replaceChildren();
   const privacy = document.createElement('p');
   privacy.className = 'assistant-privacy';
-  privacy.textContent = 'Chat con Google Gemini. Si falta un dato, tu consulta puede pasar al equipo.';
+  privacy.textContent = 'Tus mensajes se envían a Gemini y se guardan en la bandeja del equipo para atenderte. Usa “Finalizar y borrar” para eliminarlos de este sitio. No compartas contraseñas ni datos de tarjetas.';
   messages.append(privacy);
+  if (!conversation) {
+    const welcome = document.createElement('p');
+    welcome.className = 'bot-message';
+    welcome.textContent = '¡Hola! Puedo ayudarte con productos, pedidos o pasar tu consulta al equipo.';
+    messages.append(welcome);
+    return;
+  }
   conversation.messages.forEach((message) => {
     const bubble = document.createElement('p');
     bubble.className = message.role === 'customer' ? 'user-message' : message.role === 'human' ? 'human-message' : 'bot-message';
@@ -243,6 +250,23 @@ function renderChat(conversation) {
         : 'Tu pregunta está en la bandeja del equipo; aquí aparecerá su respuesta.';
     messages.append(note);
   }
+  // El botón elimina el registro de Atlas y la llave local del navegador.
+  const eraseButton = document.createElement('button');
+  eraseButton.type = 'button';
+  eraseButton.className = 'button button-outline chat-delete-button';
+  eraseButton.textContent = 'Finalizar y borrar chat';
+  eraseButton.addEventListener('click', async () => {
+    eraseButton.disabled = true;
+    try {
+      await apiRequest(`/api/chats/${encodeURIComponent(getChatKey())}`, { method: 'DELETE' });
+      localStorage.removeItem(CHAT_ID_KEY);
+      renderChat(null);
+    } catch (error) {
+      eraseButton.disabled = false;
+      eraseButton.textContent = error.message || 'No se pudo borrar. Intenta de nuevo.';
+    }
+  });
+  messages.append(eraseButton);
   messages.scrollTop = messages.scrollHeight;
 }
 

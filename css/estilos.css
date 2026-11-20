@@ -961,6 +961,11 @@ color:#806d65;
 font-size:9px;
 line-height:1.4
 }
+.chat-delete-button {
+  align-self:flex-start;
+  font-size:11px;
+  padding:7px 10px
+}
 .bot-message,.user-message {
 max-width:88%;
   margin:0;
