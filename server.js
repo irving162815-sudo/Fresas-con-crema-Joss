@@ -33,16 +33,27 @@ const customerSchema = new mongoose.Schema({
 });
 const Customer = mongoose.model('Customer', customerSchema);
 
-// Pedidos: guarda el contacto y la dirección que se necesitan para coordinar la entrega.
+// Cada línea del carrito conserva sabor, cantidad, toppings y subtotal calculado en el servidor.
+const orderLineSchema = new mongoose.Schema({
+  flavor: { type: String, required: true, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
+  quantity: { type: Number, required: true, min: 1, max: 20 },
+  regularPrice: { type: Number, required: true, min: 0 },
+  subtotal: { type: Number, required: true, min: 0 },
+  toppings: { type: [{ type: String, enum: allowedToppings }], default: [] }
+}, { _id: false });
+
+// Pedidos: guarda el carrito completo además del contacto y la dirección de entrega.
 const orderSchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: 60, trim: true },
   phone: { type: String, required: true, maxlength: 25, trim: true },
   flavor: { type: String, required: true, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
-  quantity: { type: Number, required: true, min: 1, max: 2, default: 1 },
+  quantity: { type: Number, required: true, min: 1, max: 60, default: 1 },
+  items: { type: [orderLineSchema], default: [] },
   basePrice: { type: Number, required: true, min: 0 },
   regularPrice: { type: Number, min: 0 },
   offerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
   offerTitle: { type: String, maxlength: 80, default: '' },
+  offerProduct: { type: String, enum: ['La Clásica', 'La Crocantita', 'La Consentida'] },
   offerType: { type: String, enum: ['discount', 'two_for_one'] },
   toppingUnitPrice: { type: Number, default: toppingPrice, min: 0 },
   totalPrice: { type: Number, required: true, min: 0 },
@@ -342,21 +353,28 @@ app.post('/api/customers/logout', (request, response, next) => {
 app.post('/api/orders', publicFormLimiter, async (request, response) => {
   const name = text(request.body.name, 60);
   const phone = text(request.body.phone, 25);
-  const flavor = text(request.body.flavor, 40);
-  const toppings = Array.isArray(request.body.toppings) ? [...new Set(request.body.toppings.map((item) => text(item, 40)))] : [];
+  const submittedItems = Array.isArray(request.body.items) ? request.body.items : [];
+  const items = submittedItems.map((item) => ({
+    flavor: text(item?.flavor, 40),
+    quantity: Number(item?.quantity),
+    toppings: Array.isArray(item?.toppings) ? [...new Set(item.toppings.map((topping) => text(topping, 40)))] : []
+  }));
+  const toppings = [...new Set(items.flatMap((item) => item.toppings))];
   const paymentMethod = text(request.body.paymentMethod, 30);
   const typedAddress = text(request.body.address, 250);
   const address = typedAddress || 'Ubicación GPS compartida';
   const latitude = request.body.latitude === '' || request.body.latitude == null ? undefined : Number(request.body.latitude);
   const longitude = request.body.longitude === '' || request.body.longitude == null ? undefined : Number(request.body.longitude);
   const offerId = text(request.body.offerId, 24);
-  if (!name || !phone || !productPrices.has(flavor) || toppings.some((item) => !allowedToppings.includes(item)) || !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
-    return response.status(400).json({ message: 'Completa tus datos, selecciona producto y método de pago, y acepta que usemos la información para atenderte.' });
+  if (!name || !phone || items.length < 1 || items.length > productPrices.size ||
+      items.some((item) => !productPrices.has(item.flavor) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 20 || item.toppings.some((topping) => !allowedToppings.includes(topping))) ||
+      new Set(items.map((item) => item.flavor)).size !== items.length ||
+      !['Efectivo', 'Yappy', 'Tarjeta Visa'].includes(paymentMethod) || request.body.consent !== true)
+    return response.status(400).json({ message: 'Completa tus datos, agrega productos válidos al carrito, selecciona el método de pago y acepta el uso de tus datos para atender el pedido.' });
   if ((latitude === undefined) !== (longitude === undefined) || (latitude !== undefined && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)))
     return response.status(400).json({ message: 'La ubicación GPS no es válida. Escribe tu dirección o vuelve a compartirla.' });
   if (!typedAddress && latitude === undefined) return response.status(400).json({ message: 'Escribe la dirección o comparte una ubicación GPS.' });
   let selectedOffer = null;
-  let quantity = 1;
   if (offerId) {
     if (!validObjectId(offerId)) return response.status(400).json({ message: 'La oferta seleccionada no es válida. Vuelve a elegirla desde Promociones.' });
     selectedOffer = await Offer.findById(offerId).select('title product offerType price expiresAt');
@@ -366,17 +384,32 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
       : selectedOffer?.offerType !== 'discount' || selectedOffer.price >= regularOfferPrice;
     if (!selectedOffer?.product || !Number.isFinite(selectedOffer.price) || selectedOffer.price <= 0 || invalidOfferPrice || (selectedOffer.expiresAt && selectedOffer.expiresAt <= new Date()))
       return response.status(409).json({ message: 'Esta promoción ya no está disponible. Revisa las ofertas vigentes.' });
-    if (selectedOffer.product !== flavor) return response.status(400).json({ message: 'La oferta elegida no corresponde al producto seleccionado.' });
-    if (selectedOffer.offerType === 'two_for_one') quantity = 2;
+    if (!items.some((item) => item.flavor === selectedOffer.product)) return response.status(400).json({ message: 'Agrega al carrito el producto asociado a la oferta para poder canjearla.' });
   }
-  const regularPrice = productPrices.get(flavor);
-  const basePrice = selectedOffer ? selectedOffer.price : regularPrice;
-  const toppingsTotal = toppings.length * toppingPrice * quantity;
+  const orderItems = items.map((item) => {
+    const regularPrice = productPrices.get(item.flavor);
+    let subtotal = regularPrice * item.quantity;
+    if (selectedOffer?.product === item.flavor) {
+      if (selectedOffer.offerType === 'two_for_one') {
+        if (item.quantity < 2) return null;
+        // Cada pareja paga el precio normal de una porción; una cantidad impar paga la restante.
+        subtotal = (Math.floor(item.quantity / 2) + item.quantity % 2) * regularPrice;
+      } else subtotal = selectedOffer.price * item.quantity;
+    }
+    return { ...item, regularPrice, subtotal: Number(subtotal.toFixed(2)) };
+  });
+  if (orderItems.some((item) => item === null))
+    return response.status(400).json({ message: 'La oferta 2 x 1 necesita al menos dos porciones del sabor promocionado.' });
+  const quantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+  const basePrice = Number(orderItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
+  const toppingsTotal = orderItems.reduce((sum, item) => sum + item.toppings.length * toppingPrice * item.quantity, 0);
   const totalPrice = Number((basePrice + toppingsTotal).toFixed(2));
+  const flavor = orderItems[0].flavor; // Campo legado; Admin y seguimiento usan items cuando existen.
+  const regularPrice = orderItems.length === 1 ? orderItems[0].regularPrice : undefined;
   // El cliente recibe una llave privada; en Atlas solo guardamos su huella cifrada con SHA-256.
   const trackingToken = crypto.randomBytes(32).toString('hex');
-  const order = await Order.create({ name, phone, flavor, quantity, basePrice, regularPrice, offerId: selectedOffer?._id,
-    offerTitle: selectedOffer?.title || '', offerType: selectedOffer?.offerType, toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
+  const order = await Order.create({ name, phone, flavor, quantity, items: orderItems, basePrice, regularPrice, offerId: selectedOffer?._id,
+    offerTitle: selectedOffer?.title || '', offerProduct: selectedOffer?.product, offerType: selectedOffer?.offerType, toppingUnitPrice: toppingPrice, totalPrice, toppings, paymentMethod, address, latitude, longitude,
     trackingTokenHash: crypto.createHash('sha256').update(trackingToken).digest('hex'),
     customerId: request.session.customerId || undefined });
   const paymentInstructions = {
@@ -384,12 +417,11 @@ app.post('/api/orders', publicFormLimiter, async (request, response) => {
     Yappy: 'Espera la confirmación del total del equipo antes de enviar tu pago Yappy al 6434-7297.',
     'Tarjeta Visa': 'El equipo coordinará contigo una forma segura de completar el pago. No envíes datos de tarjeta por este formulario.'
   };
-  const extraNotice = toppings.length ? ` Incluye ${toppings.length} topping(s) por porción a $${toppingPrice.toFixed(2)} cada uno${quantity > 1 ? ` (${quantity} porciones)` : ''}.` : '';
-  const offerNotice = selectedOffer ? selectedOffer.offerType === 'two_for_one'
-    ? ` Se aplicó “${selectedOffer.title}”: 2 porciones de ${flavor} por el precio regular de una ($${basePrice.toFixed(2)}).`
-    : ` Se aplicó la oferta “${selectedOffer.title}”: producto a $${basePrice.toFixed(2)} (precio regular $${regularPrice.toFixed(2)}).` : '';
-  return response.status(201).json({ id: String(order._id), trackingToken, status: order.status, statusUpdatedAt: order.statusUpdatedAt, totalPrice, quantity,
-    message: `Pedido registrado. Total: $${totalPrice.toFixed(2)} (producto $${basePrice.toFixed(2)}).${offerNotice}${extraNotice} ${paymentInstructions[paymentMethod]}` });
+  const extraNotice = toppingsTotal ? ` Los toppings cuestan $${toppingPrice.toFixed(2)} por topping y por porción.` : '';
+  const offerNotice = selectedOffer ? ` Se aplicó “${selectedOffer.title}” al producto ${selectedOffer.product}.` : '';
+  const itemSummary = orderItems.map((item) => `${item.quantity} × ${item.flavor}`).join(', ');
+  return response.status(201).json({ id: String(order._id), trackingToken, status: order.status, statusUpdatedAt: order.statusUpdatedAt, totalPrice, quantity, items: orderItems,
+    message: `Pedido registrado: ${itemSummary}. Total: $${totalPrice.toFixed(2)} (productos $${basePrice.toFixed(2)}).${offerNotice}${extraNotice} ${paymentInstructions[paymentMethod]}` });
 });
 
 // Devuelve solo el progreso del pedido si el visitante presenta su llave privada de seguimiento.
@@ -403,7 +435,7 @@ app.get('/api/orders/:id/status', orderTrackingLimiter, async (request, response
   const savedHash = Buffer.from(order.trackingTokenHash, 'hex');
   if (savedHash.length !== suppliedHash.length || !crypto.timingSafeEqual(savedHash, suppliedHash))
     return response.status(404).json({ message: 'No encontramos ese pedido. Usa el mismo navegador donde lo realizaste.' });
-  return response.json({ id: String(order._id), flavor: order.flavor, quantity: order.quantity || 1, offerTitle: order.offerTitle || '',
+  return response.json({ id: String(order._id), flavor: order.flavor, items: order.items?.map(({ flavor, quantity }) => ({ flavor, quantity })) || [], quantity: order.quantity || 1, offerTitle: order.offerTitle || '',
     offerType: order.offerType || '', status: order.status || 'received', statusUpdatedAt: order.statusUpdatedAt || order.createdAt });
 });
 

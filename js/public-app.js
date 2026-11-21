@@ -106,8 +106,11 @@ async function refreshOrderTracking() {
       const result = await apiRequest(`/api/orders/${encodeURIComponent(item.id)}/status`, {
         headers: { 'X-Order-Tracking-Token': item.token }
       });
-      const orderSummary = result.offerType === 'two_for_one' ? ' · Promoción 2 x 1, 2 porciones' : result.quantity > 1 ? ` · ${result.quantity} porciones` : '';
-      title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()} · ${result.flavor}${orderSummary}`;
+      const cartSummary = result.items?.length
+        ? result.items.map((product) => `${product.quantity} × ${product.flavor}`).join(' + ')
+        : `${result.flavor}${result.quantity > 1 ? ` × ${result.quantity}` : ''}`;
+      const offerNote = result.offerType === 'two_for_one' ? ' · Oferta 2 x 1' : '';
+      title.textContent = `Pedido #${item.id.slice(-6).toUpperCase()} · ${cartSummary}${offerNote}`;
       message.textContent = `Estado actual: ${ORDER_STEPS.find(([value]) => value === result.status)?.[1] || 'Recibido'}`;
       const steps = document.createElement('ol');
       steps.className = 'order-progress';
@@ -147,13 +150,12 @@ function cacheCustomer(customer) {
   window.dispatchEvent(new CustomEvent('jossys-data-changed'));
 }
 
-// Si el cliente llega desde el menú, deja seleccionado el sabor que escogió.
+// Si el cliente llega desde el menú, agrega una unidad del sabor elegido al carrito.
 const productCode = new URLSearchParams(window.location.search).get('producto');
 const productName = { clasica: 'La Clásica', crocantita: 'La Crocantita', consentida: 'La Consentida' }[productCode];
-if (productName) {
-  const productChoice = document.querySelector(`input[name="flavor"][value="${productName}"]`);
-  if (productChoice) productChoice.checked = true;
-}
+const productQuantityIds = { 'La Clásica': 'qty-clasica', 'La Crocantita': 'qty-crocantita', 'La Consentida': 'qty-consentida' };
+const productPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
+if (productName && productQuantityIds[productName]) document.getElementById(productQuantityIds[productName]).value = '1';
 
 // Explica los siguientes pasos según el método de pago elegido por el cliente.
 document.querySelectorAll('input[name="paymentMethod"]').forEach((choice) => choice.addEventListener('change', () => {
@@ -170,7 +172,7 @@ document.querySelectorAll('input[name="paymentMethod"]').forEach((choice) => cho
 // Enseña un total estimado; el servidor vuelve a calcularlo antes de guardarlo.
 let selectedOffer = null;
 
-// Aplica la oferta al producto y evita que se combine con un sabor distinto.
+// Vincula la oferta a su sabor y permite sumar otros sabores al mismo carrito.
 function setSelectedOffer(offer) {
   selectedOffer = offer;
   const offerId = document.querySelector('#order-offer-id');
@@ -188,16 +190,17 @@ function setSelectedOffer(offer) {
     if (offer.expiresAt) note.textContent += ` Válida hasta ${new Date(offer.expiresAt).toLocaleDateString('es-PA')}.`;
   }
   if (toppingNote) toppingNote.textContent = offer?.offerType === 'two_for_one'
-    ? 'Oferta 2 x 1: los toppings seleccionados se cobran por porción, $0.50 cada uno.'
-    : 'Precios en dólares (USD). Cada topping agrega $0.50 al total.';
-  document.querySelectorAll('input[name="flavor"]').forEach((radio) => {
-    radio.disabled = Boolean(offer && radio.value !== offer.product);
-    if (offer && radio.value === offer.product) radio.checked = true;
-  });
+    ? 'Oferta 2 x 1 para el sabor indicado. Los toppings se aplican a todas las porciones del carrito y cuestan $0.50 cada uno.'
+    : 'Precios en dólares (USD). Los toppings elegidos se aplican a todas las porciones del carrito y cuestan $0.50 cada uno.';
+  // Una oferta se aplica a su sabor, pero permite combinar otros productos en el mismo carrito.
+  const offerQuantity = document.getElementById(productQuantityIds[offer?.product]);
+  if (offerQuantity && Number(offerQuantity.value) === 0) offerQuantity.value = offer?.offerType === 'two_for_one' ? '2' : '1';
+  if (offerQuantity && offer?.offerType === 'two_for_one' && Number(offerQuantity.value) < 2) offerQuantity.value = '2';
+  document.querySelectorAll('.product-option').forEach((card) => card.classList.remove('is-selected'));
   updateOrderTotal();
 }
 
-// Quita la oferta y vuelve a habilitar los tres productos.
+// Quita la oferta y conserva las cantidades de los productos del carrito.
 function clearSelectedOffer() {
   setSelectedOffer(null);
   const url = new URL(window.location.href);
@@ -219,27 +222,66 @@ async function loadSelectedOffer() {
   document.querySelector('#selected-offer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// Lee cantidades y aplica los toppings elegidos a cada porción del carrito.
+function readCartItems() {
+  const toppings = [...document.querySelectorAll('input[name="toppings"]:checked')].map((input) => input.value);
+  return Object.entries(productQuantityIds).map(([flavor, id]) => ({
+    flavor,
+    quantity: Math.max(0, Math.min(20, Math.floor(Number(document.getElementById(id)?.value) || 0))),
+    toppings
+  })).filter((item) => item.quantity > 0);
+}
+
 function updateOrderTotal() {
   const total = document.querySelector('#order-total');
   if (!total) return;
-  const selectedProduct = document.querySelector('input[name="flavor"]:checked')?.value;
-  const productPrices = { 'La Clásica': 2.99, 'La Crocantita': 3.99, 'La Consentida': 4.99 };
-  if (!selectedProduct || !productPrices[selectedProduct]) {
-    total.textContent = 'Elige un producto para ver el total.';
+  const items = readCartItems();
+  if (!items.length) {
+    total.textContent = 'Tu carrito está vacío. Agrega uno o varios sabores para ver el total.';
+    return;
+  }
+  const offerLine = selectedOffer ? items.find((item) => item.flavor === selectedOffer.product) : null;
+  if (selectedOffer?.offerType === 'two_for_one' && offerLine && offerLine.quantity < 2) {
+    total.textContent = `Agrega al menos 2 porciones de ${selectedOffer.product} para aplicar la oferta 2 x 1.`;
     return;
   }
   const toppingCount = document.querySelectorAll('input[name="toppings"]:checked').length;
-  const regularPrice = productPrices[selectedProduct];
-  const basePrice = selectedOffer?.product === selectedProduct ? Number(selectedOffer.price) : regularPrice;
-  const quantity = selectedOffer?.product === selectedProduct && selectedOffer.offerType === 'two_for_one' ? 2 : 1;
-  const orderTotal = Number((basePrice + toppingCount * 0.5 * quantity).toFixed(2));
-  total.textContent = selectedOffer?.product === selectedProduct && selectedOffer.offerType === 'two_for_one'
-    ? `Oferta 2 x 1: ${quantity} porciones por $${basePrice.toFixed(2)}. Total estimado: $${orderTotal.toFixed(2)}${toppingCount ? ` con toppings para ${quantity} porciones` : ''}.`
-    : selectedOffer?.product === selectedProduct
-      ? `Oferta aplicada: producto $${basePrice.toFixed(2)} (antes $${regularPrice.toFixed(2)}). Total estimado: $${orderTotal.toFixed(2)} con ${toppingCount} topping(s).`
-    : `Total estimado: $${orderTotal.toFixed(2)} (${toppingCount} topping(s) × $0.50).`;
+  let quantityTotal = 0;
+  let subtotal = 0;
+  const lines = items.map((item) => {
+    quantityTotal += item.quantity;
+    const regular = productPrices[item.flavor];
+    let lineTotal = regular * item.quantity;
+    if (selectedOffer?.product === item.flavor) {
+      lineTotal = selectedOffer.offerType === 'two_for_one'
+        ? Math.floor(item.quantity / 2) * Number(selectedOffer.price) + (item.quantity % 2) * regular
+        : Number(selectedOffer.price) * item.quantity;
+    }
+    subtotal += lineTotal;
+    return `${item.quantity} × ${item.flavor}`;
+  });
+  const toppingTotal = toppingCount * 0.5 * quantityTotal;
+  const orderTotal = Number((subtotal + toppingTotal).toFixed(2));
+  const offerText = selectedOffer && offerLine
+    ? ` Oferta “${selectedOffer.title}” aplicada a ${selectedOffer.product}.` : '';
+  total.textContent = `${quantityTotal} porción(es): ${lines.join(' · ')}. Toppings: $${toppingTotal.toFixed(2)}. Total estimado: $${orderTotal.toFixed(2)}.${offerText}`;
 }
-document.querySelectorAll('input[name="flavor"],input[name="toppings"]').forEach((choice) => choice.addEventListener('change', updateOrderTotal));
+document.querySelectorAll('[data-cart-quantity]').forEach((quantity) => {
+  quantity.addEventListener('input', updateOrderTotal);
+  quantity.addEventListener('change', () => {
+    const parsed = Math.max(0, Math.min(20, Math.floor(Number(quantity.value) || 0)));
+    quantity.value = String(parsed);
+    updateOrderTotal();
+  });
+});
+document.querySelectorAll('[data-quantity-target]').forEach((button) => button.addEventListener('click', () => {
+  const quantity = document.getElementById(button.dataset.quantityTarget);
+  if (!quantity) return;
+  const next = Math.max(0, Math.min(20, (Number(quantity.value) || 0) + Number(button.dataset.quantityChange)));
+  quantity.value = String(next);
+  quantity.dispatchEvent(new Event('input', { bubbles: true }));
+}));
+document.querySelectorAll('input[name="toppings"]').forEach((choice) => choice.addEventListener('change', updateOrderTotal));
 updateOrderTotal();
 document.querySelector('#remove-selected-offer')?.addEventListener('click', clearSelectedOffer);
 loadSelectedOffer().catch((error) => showMessage(document.querySelector('#order-message'), error.message, true));
@@ -278,13 +320,23 @@ document.querySelector('#order-form')?.addEventListener('submit', async (event) 
   const formData = new FormData(form);
   const fields = Object.fromEntries(formData);
   fields.toppings = formData.getAll('toppings');
+  const items = readCartItems();
+  if (!items.length) {
+    showMessage(document.querySelector('#order-message'), 'Agrega al menos un producto al carrito antes de enviar el pedido.', true);
+    return;
+  }
+  if (selectedOffer && !items.some((item) => item.flavor === selectedOffer.product)) {
+    showMessage(document.querySelector('#order-message'), `Agrega ${selectedOffer.product} para poder aplicar la oferta seleccionada.`, true);
+    return;
+  }
   const message = document.querySelector('#order-message');
   const submit = form.querySelector('[type="submit"]');
   submit.disabled = true;
   submit.setAttribute('aria-busy', 'true');
   try {
     const result = await apiRequest('/api/orders', { method: 'POST', body: JSON.stringify({
-      ...fields, consent: fields.consent === 'on'
+      name: fields.name, phone: fields.phone, address: fields.address, latitude: fields.latitude, longitude: fields.longitude,
+      paymentMethod: fields.paymentMethod, consent: fields.consent === 'on', offerId: fields.offerId, items
     }) });
     showMessage(message, result.message);
     // Conserva el acceso privado y muestra inmediatamente el seguimiento al cliente.

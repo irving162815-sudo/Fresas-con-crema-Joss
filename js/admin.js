@@ -38,11 +38,18 @@ function renderOrders(orders) {
   orders.forEach((order) => {
     const card = makeElement('article', 'order-item');
     const details = makeElement('div');
-    details.append(makeElement('h3', '', `${order.flavor} — ${order.name}`));
+    const orderItems = Array.isArray(order.items) && order.items.length ? order.items : null;
+    const cartSummary = orderItems ? orderItems.map((item) => `${item.quantity} × ${item.flavor}`).join(' + ') : `${order.flavor}${order.quantity > 1 ? ` × ${order.quantity}` : ''}`;
+    details.append(makeElement('h3', '', `${cartSummary} — ${order.name}`));
     details.append(makeElement('p', '', `Teléfono: ${order.phone}`));
-    if (order.quantity > 1) details.append(makeElement('p', 'order-current-status', `Cantidad: ${order.quantity} porciones · ${order.offerType === 'two_for_one' ? 'Promoción 2 x 1' : 'Oferta aplicada'}`));
-    details.append(makeElement('p', '', order.basePrice == null ? 'Precio base: No especificado' : `${order.offerTitle ? 'Precio de oferta' : 'Precio base'}: $${Number(order.basePrice).toFixed(2)}`));
-    if (order.offerTitle) details.append(makeElement('p', 'order-current-status', `Oferta aplicada: ${order.offerTitle} · Precio regular $${Number(order.regularPrice || 0).toFixed(2)}`));
+    if (orderItems) orderItems.forEach((item) => {
+      details.append(makeElement('p', '', `${item.quantity} × ${item.flavor}: $${Number(item.subtotal).toFixed(2)} en productos${item.toppings?.length ? ` · toppings por porción: ${item.toppings.join(', ')}` : ''}`));
+    });
+    if (order.quantity > 1) details.append(makeElement('p', 'order-current-status', `Total del carrito: ${order.quantity} porciones${order.offerType === 'two_for_one' ? ' · Promoción 2 x 1 aplicada al producto indicado' : ''}`));
+    details.append(makeElement('p', '', order.basePrice == null ? 'Subtotal de productos: No especificado' : `${order.offerTitle ? 'Subtotal con oferta' : 'Subtotal de productos'}: $${Number(order.basePrice).toFixed(2)}`));
+    if (order.offerTitle) details.append(makeElement('p', 'order-current-status', Number.isFinite(order.regularPrice)
+      ? `Oferta aplicada a ${order.offerProduct || order.flavor}: ${order.offerTitle} · Precio regular $${Number(order.regularPrice).toFixed(2)}`
+      : `Oferta aplicada a ${order.offerProduct || 'un producto del carrito'}: ${order.offerTitle}`));
     if (order.toppings?.length) details.append(makeElement('p', '', `Toppings por porción: ${order.toppings.join(', ')} ($${Number(order.toppingUnitPrice ?? 0.5).toFixed(2)} cada topping${order.quantity > 1 ? ` × ${order.quantity} porciones` : ''})`));
     details.append(makeElement('p', '', order.totalPrice == null ? 'Total: No especificado' : `Total del pedido: $${Number(order.totalPrice).toFixed(2)}`));
     details.append(makeElement('p', '', `Dirección: ${order.address}`));

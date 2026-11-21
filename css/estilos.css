@@ -2804,3 +2804,87 @@ body {
   .social-card:hover:before,.social-card:focus-visible:before,
   .social-card:hover:after,.social-card:focus-visible:after { animation:none; }
 }
+
+/* Selectores para crear un carrito con varios sabores y cantidades. */
+.product-picker {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+}
+.product-picker legend { margin-bottom:2px; }
+.product-picker legend small { color:#806d65; font-size:10px; font-weight:400; }
+.product-option {
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr) auto;
+  align-items:center;
+  gap:13px;
+  min-width:0;
+  min-height:105px;
+  padding:10px;
+  overflow:visible;
+  background:#fffdfa;
+  border:1px solid #ead8cf;
+  border-radius:12px;
+  transition:border-color .2s,background .2s,transform .2s,box-shadow .2s;
+}
+.product-option:hover { transform:translateY(-2px); border-color:#e0b318; box-shadow:0 8px 22px #38241c10; }
+.product-option img { width:92px; height:82px; margin:0; border:0; border-radius:8px; object-fit:cover; }
+.product-info { display:grid; gap:3px; min-width:0; }
+.product-info b { font:700 16px var(--serif); }
+.product-info small { color:#806d65; font-size:10px; line-height:1.4; }
+.product-info strong { color:var(--berry); font-size:12px; }
+.quantity-control { display:flex; align-items:center; gap:5px; }
+.quantity-control button {
+  display:grid;
+  place-items:center;
+  width:35px;
+  height:35px;
+  flex:0 0 35px;
+  border:1px solid #e1c4b7;
+  border-radius:50%;
+  background:#fff6ef;
+  color:var(--berry);
+  font-size:19px;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .18s,transform .18s;
+}
+.quantity-control button:hover { transform:scale(1.06); background:var(--yellow); color:var(--ink); }
+.order-form .quantity-control input[type=number] {
+  width:44px;
+  height:36px;
+  margin:0;
+  padding:3px;
+  border-radius:8px;
+  background:white;
+  text-align:center;
+  font-weight:700;
+  align-self:center;
+  appearance:textfield;
+  -moz-appearance:textfield;
+}
+.order-form .quantity-control input[type=number]::-webkit-inner-spin-button,
+.order-form .quantity-control input[type=number]::-webkit-outer-spin-button { margin:0; -webkit-appearance:none; }
+.order-total { line-height:1.7; overflow-wrap:anywhere; }
+@media(max-width:650px) {
+  .product-picker { grid-template-columns:minmax(0,1fr); }
+  .product-option {
+    grid-template-columns:66px minmax(0,1fr) auto;
+    gap:8px;
+    min-height:88px;
+    padding:8px;
+  }
+  .product-option img { grid-column:auto; grid-row:auto; width:66px; height:66px; }
+  .product-option>span { grid-column:auto; grid-row:auto; padding:0; }
+  .product-info b { font-size:14px; }
+  .product-info small { font-size:9px; }
+  .quantity-control { gap:3px; }
+  .quantity-control button { width:30px; height:30px; flex-basis:30px; }
+  .order-form .quantity-control input[type=number] { width:37px; height:32px; margin:0; }
+}
+@media(max-width:370px) {
+  .product-option { grid-template-columns:55px minmax(0,1fr) auto; gap:6px; padding:7px; }
+  .product-option img { width:55px; height:58px; }
+  .quantity-control button { width:27px; height:27px; flex-basis:27px; }
+  .order-form .quantity-control input[type=number] { width:32px; height:30px; }
+}

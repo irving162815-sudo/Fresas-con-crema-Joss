@@ -28,18 +28,18 @@
 <p class="eyebrow">TU ANTOJITO TE ESPERA</p>
 <h1>Haz tu <em>pedido</em>
 </h1>
-<p>Cuéntanos qué sabor quieres y dónde te lo llevamos.</p>
+<p>Combina varios sabores y completa un solo pedido para la entrega.</p>
 </section>
 <!-- Formulario de productos y datos de entrega, incluida la opción de GPS. -->
 <section class="section-wrap order-page">
 <div class="order-intro">
 <p class="eyebrow">FÁCIL, CLARO Y A TU GUSTO</p>
-<h2>Fresco, rico<br>y hecho <em>para ti.</em>
+<h2>Arma tu<br><em>menú ideal.</em>
 </h2>
-<p>Completa los datos y el equipo revisará tu pedido. Si compartes tu ubicación, el mapa aparecerá aquí antes de enviarlo.</p>
+<p>Combina tus sabores favoritos, elige cuántos quieres y agrega toppings para todas tus porciones. El equipo revisará el pedido y coordinará la entrega.</p>
 <ol class="order-steps" aria-label="Pasos para hacer un pedido">
-<li><span>1</span><div><b>Escoge tu vasito</b><small>Elige uno de nuestros tres sabores.</small></div></li>
-<li><span>2</span><div><b>Personalízalo</b><small>Agrega tus toppings y revisa el total.</small></div></li>
+<li><span>1</span><div><b>Combina sabores</b><small>Agrega uno o varios productos al carrito.</small></div></li>
+<li><span>2</span><div><b>Personaliza tu menú</b><small>Elige cantidades y toppings por porción.</small></div></li>
 <li><span>3</span><div><b>Coordina la entrega</b><small>Déjanos tus datos y método de pago.</small></div></li>
 </ol>
 <a class="order-back-link" href="menu.html">← Ver los sabores del menú</a>
@@ -50,12 +50,12 @@
 <input id="customer-name" name="name" autocomplete="name" required maxlength="60" placeholder="Tu nombre">
 <label for="customer-phone">Teléfono de contacto</label>
 <input id="customer-phone" name="phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Tu número de WhatsApp">
-<!-- Cada opción visual selecciona el producto que se enviará al pedido. -->
+<!-- Cada control de cantidad agrega ese sabor al carrito; el servidor confirma el total. -->
 <fieldset class="product-picker">
-<legend>Elige tu producto</legend>
-<label class="product-option"><input type="radio" name="flavor" value="La Clásica" required><img src="assets/productos/clasica.jpeg" alt=""><span><b>La Clásica</b><small>Fresas frescas con crema dulce</small><strong>$2.99</strong></span></label>
-<label class="product-option"><input type="radio" name="flavor" value="La Crocantita" required><img src="assets/productos/crocantita.jpeg" alt=""><span><b>La Crocantita</b><small>Con un toque crujiente</small><strong>$3.99</strong></span></label>
-<label class="product-option"><input type="radio" name="flavor" value="La Consentida" required><img src="assets/productos/consentida.jpeg" alt=""><span><b>La Consentida</b><small>Nuestra combinación especial</small><strong>$4.99</strong></span></label>
+<legend>Arma tu carrito <small>· puedes combinar sabores</small></legend>
+<article class="product-option"><img src="assets/productos/clasica.jpeg" alt="La Clásica" loading="lazy"><div class="product-info"><b>La Clásica</b><small>Fresas frescas con crema dulce</small><strong>$2.99 c/u</strong></div><div class="quantity-control"><button type="button" data-quantity-target="qty-clasica" data-quantity-change="-1" aria-label="Quitar una Clásica">−</button><input id="qty-clasica" name="qty_clasica" data-cart-quantity type="number" min="0" max="20" value="0" inputmode="numeric" aria-label="Cantidad de La Clásica"><button type="button" data-quantity-target="qty-clasica" data-quantity-change="1" aria-label="Agregar una Clásica">+</button></div></article>
+<article class="product-option"><img src="assets/productos/crocantita.jpeg" alt="La Crocantita" loading="lazy"><div class="product-info"><b>La Crocantita</b><small>Con un toque crujiente</small><strong>$3.99 c/u</strong></div><div class="quantity-control"><button type="button" data-quantity-target="qty-crocantita" data-quantity-change="-1" aria-label="Quitar una Crocantita">−</button><input id="qty-crocantita" name="qty_crocantita" data-cart-quantity type="number" min="0" max="20" value="0" inputmode="numeric" aria-label="Cantidad de La Crocantita"><button type="button" data-quantity-target="qty-crocantita" data-quantity-change="1" aria-label="Agregar una Crocantita">+</button></div></article>
+<article class="product-option"><img src="assets/productos/consentida.jpeg" alt="La Consentida" loading="lazy"><div class="product-info"><b>La Consentida</b><small>Nuestra combinación especial</small><strong>$4.99 c/u</strong></div><div class="quantity-control"><button type="button" data-quantity-target="qty-consentida" data-quantity-change="-1" aria-label="Quitar una Consentida">−</button><input id="qty-consentida" name="qty_consentida" data-cart-quantity type="number" min="0" max="20" value="0" inputmode="numeric" aria-label="Cantidad de La Consentida"><button type="button" data-quantity-target="qty-consentida" data-quantity-change="1" aria-label="Agregar una Consentida">+</button></div></article>
 </fieldset>
 <!-- La oferta se recibe desde el enlace de Promociones y el servidor confirma su precio. -->
 <input type="hidden" name="offerId" id="order-offer-id">
@@ -63,8 +63,8 @@
 <p id="selected-offer-message"></p>
 <button type="button" class="button button-outline" id="remove-selected-offer">Quitar oferta</button>
 </div>
-<p class="price-note">Precios en dólares (USD). Cada topping agrega $0.50 al total.</p>
-<!-- Cada topping suma cincuenta centavos al total que calcula el servidor. -->
+<p class="price-note">Precios en dólares (USD). Cada topping agrega $0.50 por porción y se aplica a todos los productos del carrito.</p>
+<!-- Los toppings seleccionados se agregan a cada porción incluida en el carrito. -->
 <fieldset class="topping-picker">
 <legend>Personaliza con toppings <small>(opcional)</small></legend>
 <label class="topping-option"><input type="checkbox" name="toppings" value="Extra de crema"><img src="assets/toppings/extra-crema.jpg" alt=""><span>Extra de crema <b>+$0.50</b></span></label>
@@ -73,7 +73,7 @@
 <label class="topping-option"><input type="checkbox" name="toppings" value="Galletas Oreo"><img src="assets/toppings/galletas-oreo.jpg" alt=""><span>Galletas Oreo <b>+$0.50</b></span></label>
 <label class="topping-option"><input type="checkbox" name="toppings" value="Extra de fresas"><img src="assets/toppings/extra-fresas.jpg" alt=""><span>Extra de fresas <b>+$0.50</b></span></label>
 </fieldset>
-<p class="order-total" id="order-total" aria-live="polite">Elige un producto para ver el total.</p>
+<p class="order-total" id="order-total" aria-live="polite">Agrega productos para ver el resumen y el total.</p>
 <p class="illustrative-note">Las imágenes de toppings son solamente ilustrativas.</p>
 <label for="delivery-address">Dirección escrita</label>
 <textarea id="delivery-address" name="address" autocomplete="street-address" required maxlength="250" placeholder="Calle, corregimiento y punto de referencia">
